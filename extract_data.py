@@ -2,9 +2,42 @@ import os
 import json
 import networkx as nx
 from data_vis import load_scene_mesh, visualize_graph
+import numpy as np
 
 data_folder = "data"
 visualize = False
+
+
+def count_changes(time_series):
+    change_count = 0
+    for i in range(len(time_series)-1):
+        if time_series[i] != time_series[i+1]:
+            change_count += 1
+
+    return change_count
+
+
+def calculate_att_changes(node_dict):
+    changes_dict = {}
+    for id in node_dict.keys():
+        attributes = node_dict[id]
+        att_changes_dict = {}
+        for att in attributes.keys():
+            att_time_series = attributes[att]
+            size = len(att_time_series) - 1
+            if att == "location":
+                loc_cov = np.cov(np.asarray(att_time_series).T)
+                att_changes_dict[att] = (loc_cov, size)
+            else:
+                att_time_series = attributes[att]
+                changes = count_changes(att_time_series)
+                size = len(att_time_series)-1
+                rate = changes/size if size > 0 else None
+                att_changes_dict[att] = (changes, size, rate)
+
+        changes_dict[id] = att_changes_dict
+
+    return changes_dict
 
 
 def parse_node(in_node, node_dict):
@@ -68,7 +101,7 @@ def build_scene_graph(nodes_dict, edges_dict, scan_id):
                                   "color": node.pop("ply_color", None)}
 
         if object_pos_list is not None:
-            att_dict["location"]: object_pos_list[id]
+            att_dict["attributes"]["location"] = object_pos_list[id]
         input_node_list.append((id, att_dict))
         label_dict[node["id"]] = att_dict["label"]
     graph.add_nodes_from(input_node_list)
@@ -111,5 +144,7 @@ if __name__ == "__main__":
             if visualize:
                 load_scene_mesh(ref_scan)
                 visualize_graph(scene_graph, graph_out_folder, ref_scan)
+
+        att_change_dict = calculate_att_changes(nodes_over_time) if nodes is not None else None
 
 
