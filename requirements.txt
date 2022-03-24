@@ -1,0 +1,8 @@
+vedo
+matplotlib
+networkx
+numpy
+pyvis
+meshio
+ployly
+
