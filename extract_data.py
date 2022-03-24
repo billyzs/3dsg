@@ -2,28 +2,24 @@ import os
 import json
 import networkx as nx
 from data_vis import load_scene_mesh, visualize_graph
+import numpy as np
 
 data_folder = "data"
-
-
-def parse_node(in_node, node_dict):
-    for attribute in in_node.keys():
-        if attribute in node_dict.keys():
-            node_dict[attribute].append(in_node[attribute])
-        else:
-            node_dict[attribute] = [in_node[attribute]]
-    return node_dict
 
 
 def parse_nodelist(in_nodes, nodes_dict, label_dict):
     for node in in_nodes:
         id = node[0]
-        content = node[1]["attributes"]
-        if id in nodes_dict.keys():
-            nodes_dict[id] = parse_node(content, nodes_dict[id])
-        else:
-            nodes_dict[id] = parse_node(content, {})
+        if id not in nodes_dict.keys():
+            nodes_dict[id] = {"location": [], "state": []}
             label_dict[id] = node[1]["label"]
+        if "location" in node[1]["attributes"].keys():
+            location = node[1]["attributes"]["location"]
+            nodes_dict[id]["location"].append(location)
+
+        if "state" in node[1]["attributes"].keys():
+            state = node[1]["attributes"]["state"]
+            nodes_dict[id]["state"].append(state)
 
     return nodes_dict, label_dict
 
@@ -46,7 +42,7 @@ def format_sem_seg_dict(sem_seg_dict):
 
 def build_scene_graph(nodes_dict, edges_dict, scan_id):
     if scan_id not in nodes_dict.keys() or scan_id not in edges_dict.keys():
-        print("No graph information for this scan")
+        # print("No graph information for this scan")
         return None, None, None
 
     scan_sem_seg_file = os.path.join(data_folder, "semantic_segmentation_data", scan_id, "semseg.v2.json")
@@ -68,7 +64,7 @@ def build_scene_graph(nodes_dict, edges_dict, scan_id):
                                   "color": node.pop("ply_color", None)}
 
         if object_pos_list is not None:
-            att_dict["attributes"]["location"] = object_pos_list[id]
+            att_dict["attributes"]["location"] = np.clip(object_pos_list[id], -100, 100)
 
         att_dict["attributes"].pop("lexical", None)
         input_node_list.append((id, att_dict))
