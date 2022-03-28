@@ -15,6 +15,7 @@ ply_file = "labels.instances.annotated.v2.ply"
 mesh_path = os.path.join(scan_dir, scan_id, ply_file)
 mesh_data = meshio.read(mesh_path)
 
+
 def mesh_to_figure(mesh_data: meshio.Mesh):
     vertices = mesh_data.points # n by 3
     triangles = mesh_data.get_cells_type("triangle")
@@ -27,6 +28,7 @@ def mesh_to_figure(mesh_data: meshio.Mesh):
         vertexcolor=rgb.T,
     )
     return pl_mesh
+
 
 def scene_graph_to_figure():
     with open(os.path.join(scan_dir, "scene-graphs", "objects.json")) as f:
@@ -80,6 +82,7 @@ def scene_graph_to_figure():
     )
     return nodes_trace, edges_trace
 
+
 def main():
     pl_mesh = mesh_to_figure(mesh_data)
     pl_mesh.name = f"{scan_id=}"
@@ -90,6 +93,7 @@ def main():
             pl_mesh,
     ])
     fig.show()
+
 
 if __name__ == "__main__":
     main()

@@ -4,7 +4,18 @@ import networkx as nx
 from data_vis import load_scene_mesh, visualize_graph
 import numpy as np
 
-data_folder = "data"
+data_folder = "/home/sam/ethz/plr/plr-2022-predicting-changes/data/raw"
+
+
+def transform_locations(node_list, T):
+    for i in range(len(node_list)):
+        location = node_list[i][1]["attributes"]["location"]
+        homogenous_location = np.expand_dims(np.concatenate((location, [1])), axis=1)
+        trans_mat = np.asarray(T).reshape((4, 4)).T
+        ref_frame_location = np.linalg.inv(trans_mat) @ homogenous_location
+        node_list[i][1]["attributes"]["location"] = ref_frame_location[:3]
+
+    return node_list
 
 
 def parse_nodelist(in_nodes, nodes_dict, label_dict):
@@ -101,7 +112,8 @@ def build_graph_time_series(scene_dict, objects_file, relationships_file, visual
         scene_graph, nodes, edges = build_scene_graph(objects_dict, relationships_dict, scan_id)
         scene_graphs_over_time.append(scene_graph)
         if nodes is not None:
-            nodes_over_time, node_label_dict = parse_nodelist(nodes, nodes_over_time, node_label_dict)
+            transformed_nodes = transform_locations(nodes, scan["transform"])
+            nodes_over_time, node_label_dict = parse_nodelist(transformed_nodes, nodes_over_time, node_label_dict)
         edges_over_time.append(edges)
         if visualize:
             visualize_graph(scene_graph, graph_out_folder, ref_scan)
@@ -117,6 +129,6 @@ if __name__ == "__main__":
     graph_out_folder = os.path.join(data_folder, "graphs")
 
     for scene in scans:
-        build_graph_time_series(scene, objects_in_file, relationships_in_file)
+        scenegraph_ts, node_ts, edge_ts, label_dict = build_graph_time_series(scene, objects_in_file, relationships_in_file)
 
 
