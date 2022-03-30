@@ -69,10 +69,11 @@ def build_scene_graph(nodes_dict, edges_dict, scan_id):
     input_node_list = []
     label_dict = {}
     for node in nodes:
+        node_copy = node.copy()
         id = int(node["id"])
-        att_dict = {"label": node.pop("label", None), "affordances": node.pop("affordances", None),
-                                  "attributes": node.pop("attributes", None), "global_id": node.pop("global_id", None),
-                                  "color": node.pop("ply_color", None)}
+        att_dict = {"label": node_copy.pop("label", None), "affordances": node_copy.pop("affordances", None),
+                                  "attributes": node_copy.pop("attributes", None), "global_id": node_copy.pop("global_id", None),
+                                  "color": node_copy.pop("ply_color", None)}
 
         if object_pos_list is not None:
             att_dict["attributes"]["location"] = np.clip(object_pos_list[id], -100, 100)
