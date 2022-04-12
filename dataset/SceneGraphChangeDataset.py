@@ -1,10 +1,17 @@
-import torch
-import os
-from torch_geometric.data import InMemoryDataset, Data
 import json
-from utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
+import logging
+import os
+from typing import List
+import uuid
+import torch
+from torch_geometric.data import InMemoryDataset, Data
+from delta_3dsg.extract_data import build_scene_graph, format_scan_dict, transform_locations
+from delta_3dsg import AttributesAllowList
 import numpy as np
 from tqdm import tqdm
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_scene_list(scene):
@@ -29,6 +36,7 @@ class SceneGraphChangeDataset(InMemoryDataset):
         # Location representation mode
         #   "rel": Relative positions as graph node relationships,
         #   "global": Global position vectors as graph node attributes)
+        self.uuid = uuid.uuid4()
         self.loc_mode = loc_mode
 
         # Location label mode:
@@ -44,7 +52,9 @@ class SceneGraphChangeDataset(InMemoryDataset):
         relationships_json = json.load(open(os.path.join(root, "raw", "scene-graphs", "relationships.json")))
         self.attributes_file = os.path.join(root, "raw", "scene-graphs", "attributes.txt")
         self.attributes_dict = {}
-        self.parse_attributes()
+        # self.parse_attributes()
+        if isinstance(pre_transform, AttributesAllowList):
+            self.attributes_dict = pre_transform.attributes
         self.label_len = len(self.attributes_dict["state"]) + 3
 
         self.objects_dict = format_scan_dict(objects_json, "objects")
@@ -65,10 +75,11 @@ class SceneGraphChangeDataset(InMemoryDataset):
 
     @property
     def processed_file_names(self):
-        return ['scene_graph_data.pt']
+        return [f"scene_graph_data_{self.uuid}.pt", f"{self.uuid}.txt"]
 
     def download(self):
-        raise Exception("Files Not Found!")
+        pass
+        #raise Exception("Files Not Found!")
 
     def parse_attributes(self):
         with open(self.attributes_file) as f:
@@ -80,9 +91,9 @@ class SceneGraphChangeDataset(InMemoryDataset):
                 else:
                     self.attributes_dict[att_class].append(att_value)
 
-        del self.attributes_dict["other"]
-        del self.attributes_dict["symmetry"]
-        del self.attributes_dict["style"]
+        # del self.attributes_dict["other"]
+        # del self.attributes_dict["symmetry"]
+        # del self.attributes_dict["style"]
 
     def calc_node_embedding(self, node_dict):
         embedding = []
@@ -185,7 +196,29 @@ class SceneGraphChangeDataset(InMemoryDataset):
         torch.save((data, slices), self.processed_paths[0])
 
 
+@gin.configurable
+def make_dataset(
+        dataset_root: str,
+        allowed_attributes: List[str],
+    ):
+    logger.debug(f"{dataset_root=}")
+    allow_list = AttributesAllowList(allowed_attributes)
+    dataset = SceneGraphChangeDataset(
+        dataset_root,
+        pre_transform=allow_list,
+    )
+    return dataset
+
+
+@gin.configurable
+def dataset_main(
+        log_level: str,
+    ):
+    logging.basicConfig(level=log_level)
+    dataset = make_dataset()
+    return dataset
+
+
 if __name__ == "__main__":
-    data_folder = "/home/sam/ethz/plr/plr-2022-predicting-changes/data"
-    dataset = SceneGraphChangeDataset(data_folder, loc_mode="global")
-    print(len(dataset))
+    gin.parse_config_file("config.gin")
+    d = dataset_main()
