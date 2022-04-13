@@ -176,7 +176,7 @@ class FilteredSceneGraphChangeDataset(InMemoryDataset):
         torch.save((data, slices), self.processed_paths[0])
         config_file_name = self.processed_paths[1]
         with open(config_file_name, 'w') as f:
-            print(self.attributes_dict, f)
+            print(self.attributes_dict, file=f)
 
 
 
