@@ -3,7 +3,7 @@ from enum import IntEnum, unique
 @unique
 class Relationships3DSSG(IntEnum):
     def __str__(self):
-        return super().__str__().replace("Objects","")
+        return super().__str__().replace("Relationships","")
     none = 0
     supported_by = 1
     left = 2
