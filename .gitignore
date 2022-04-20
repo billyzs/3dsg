@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/linux,python,kdevelop4,windows,vim,virtualenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,python,kdevelop4,windows,vim,virtualenv
 
+3DSSG/
+*.zip
 ### KDevelop4 ###
 *.kdev4
 .kdev4/
