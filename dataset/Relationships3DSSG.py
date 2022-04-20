@@ -1,5 +1,6 @@
 from enum import IntEnum, unique
 
+
 @unique
 class Relationships3DSSG(IntEnum):
     def __str__(self):

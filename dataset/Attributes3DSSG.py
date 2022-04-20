@@ -2,25 +2,26 @@ from typing import Tuple, List, Set
 from enum import IntEnum, unique
 from functools import cache
 
+
 @unique
 class Attributes3DSSG(IntEnum):
     def __str__(self) -> str:
-        return super().__str__().replace("Attributes3DSSG.","")
+        return super().__str__().replace("Attributes3DSSG.", "")
 
     @staticmethod
     @cache
     def categories():
         return [
-        "color",
-        "shape",
-        "style",
-        "state",
-        "size",
-        "material",
-        "texture",
-        "other",
-        "symmetry",
-    ]
+            "color",
+            "shape",
+            "style",
+            "state",
+            "size",
+            "material",
+            "texture",
+            "other",
+            "symmetry",
+        ]
 
     @staticmethod
     @cache
@@ -34,6 +35,7 @@ class Attributes3DSSG(IntEnum):
             return Attributes3DSSG.key_to_value()[e]
         except KeyError:
             raise ValueError(f"{raw} cannot be converted to known attributes")
+
     none = -1
     color_white = 0
     color_black = 1

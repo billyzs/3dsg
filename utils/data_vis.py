@@ -1,8 +1,6 @@
 from vedo import Mesh, show
 import os
 import numpy as np
-import networkx as nx
-from matplotlib import pyplot as plt
 from pyvis.network import Network
 
 

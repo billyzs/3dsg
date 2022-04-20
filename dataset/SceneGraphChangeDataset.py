@@ -5,8 +5,8 @@ from typing import List
 import uuid
 import torch
 from torch_geometric.data import InMemoryDataset, Data
-from delta_3dsg.extract_data import build_scene_graph, format_scan_dict, transform_locations
-from delta_3dsg import AttributesAllowList
+from utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
+from dataset import AttributesAllowList
 import numpy as np
 from tqdm import tqdm
 

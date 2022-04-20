@@ -90,3 +90,8 @@ wslink==1.4.3
 yacs @ file:///home/conda/feedstock_root/build_artifacts/yacs_1645705974477/work
 yarl==1.7.2
 zope.interface==5.4.0
+
+matplotlib~=3.5.1
+numpy~=1.21.2
+tqdm~=4.63.1
+gin~=0.1.6

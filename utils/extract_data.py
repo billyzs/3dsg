@@ -1,7 +1,7 @@
 import os
 import json
 import networkx as nx
-from data_vis import load_scene_mesh, visualize_graph
+from utils.data_vis import visualize_graph
 import numpy as np
 
 data_folder = "/home/sam/ethz/plr/plr-2022-predicting-changes/data/raw"

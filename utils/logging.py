@@ -128,3 +128,6 @@ class EvalLogger:
         print("     Accuracy: {}".format((self.mask_conf[0, 0] + self.mask_conf[1, 1]) / torch.sum(self.mask_conf)))
         print("     Precision: {}".format(self.mask_conf[0, 0] / torch.sum(self.mask_conf[0, :])))
         print("     Recall: {}".format(self.mask_conf[0, 0] / torch.sum(self.mask_conf[:, 0])))
+        print(self.state_conf)
+        print(self.pos_conf)
+        print(self.mask_conf)

@@ -14,11 +14,10 @@ class AttributesAllowList:
         self,
         allowed_attributes: Optional[List[str]] = None,
     ):
-        self.allowlist = allowed_attributes;
-        self.attributes = self.__validate_input(allowed_attributes)
+        self.allowlist = allowed_attributes
+        self.attributes = self._validate_input(allowed_attributes)
 
-
-    def __validate_input(self, allowed_attributes: Optional[List[str]]):
+    def _validate_input(self, allowed_attributes: Optional[List[str]]):
         if allowed_attributes is None:
             raise ValueError("no attributes specified to build node embedding")
         logger.info(f"processing {allowed_attributes=}")
@@ -33,7 +32,6 @@ class AttributesAllowList:
             attributes.setdefault(category, []).append(val)
         logger.info(f"allowing the following attributes: {attributes}")
         return attributes
-
 
     def __call__(self, graph: Data) -> Data:
         return graph

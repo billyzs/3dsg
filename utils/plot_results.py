@@ -1,8 +1,5 @@
 import os
-import json
-from extract_data import build_graph_time_series
 import numpy as np
-from tqdm import tqdm
 from matplotlib import pyplot as plt
 
 

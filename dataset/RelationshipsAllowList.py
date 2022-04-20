@@ -21,7 +21,6 @@ class RelationshipsAllowList:
         # TODO bzs actually test this
         rels = rels[:, self.allow_mask]
 
-
     def __call__(self, graph: Data) -> Data:
         self.remove_unused_relationships(graph.edge_attr)
         return graph

@@ -3,14 +3,13 @@ import os
 import json
 import torch
 import uuid
-from typing import List, Dict
+from typing import List
 from torch_geometric.data import InMemoryDataset, Data
 import numpy as np
 from tqdm import tqdm
 import gin
-from extract_data import build_scene_graph, format_scan_dict
+from utils.extract_data import build_scene_graph, format_scan_dict
 from AttributesAllowList import AttributesAllowList
-
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +79,9 @@ class FilteredSceneGraphChangeDataset(InMemoryDataset):
                 else:
                     self.attributes_dict[att_class].append(att_value)
 
-        #del self.attributes_dict["other"]
-        #del self.attributes_dict["symmetry"]
-        #del self.attributes_dict["style"]
+        # del self.attributes_dict["other"]
+        # del self.attributes_dict["symmetry"]
+        # del self.attributes_dict["style"]
 
     def calc_node_embedding(self, node_dict):
         embedding = []
@@ -163,13 +162,16 @@ class FilteredSceneGraphChangeDataset(InMemoryDataset):
             for i in range(len(scan_id_set)):
                 for j in range(len(scan_id_set)):
                     if i != j:
-                        _, nodes_1, edges_1 = build_scene_graph(self.objects_dict, self.relationships_dict, scan_id_set[i])
-                        _, nodes_2, edges_2 = build_scene_graph(self.objects_dict, self.relationships_dict, scan_id_set[j])
+                        _, nodes_1, edges_1 = build_scene_graph(self.objects_dict, self.relationships_dict,
+                                                                scan_id_set[i])
+                        _, nodes_2, edges_2 = build_scene_graph(self.objects_dict, self.relationships_dict,
+                                                                scan_id_set[j])
                         if nodes_1 is not None and nodes_2 is not None:
                             node_embeddings, node_idxs = self.format_node_embeddings(nodes_1)
                             node_labels, node_masks = self.format_node_labels(nodes_2, node_idxs)
                             edge_idx, edge_embeddings = self.format_edge_embeddings(edges_1, node_idxs)
-                            sample = Data(x=node_embeddings, edge_index=edge_idx, edge_attr=edge_embeddings, y=node_labels, mask=node_masks)
+                            sample = Data(x=node_embeddings, edge_index=edge_idx, edge_attr=edge_embeddings,
+                                          y=node_labels, mask=node_masks)
                             samples.append(sample)
 
         data, slices = self.collate(samples)
@@ -179,14 +181,11 @@ class FilteredSceneGraphChangeDataset(InMemoryDataset):
             print(self.attributes_dict, file=f)
 
 
-
-
-
 @gin.configurable
 def make_dataset(
         dataset_root: str,
         allowed_attributes: List[str],
-    ):
+):
     logger.debug(f"{dataset_root=}")
     allow_list = AttributesAllowList(allowed_attributes)
     dataset = FilteredSceneGraphChangeDataset(
@@ -199,7 +198,7 @@ def make_dataset(
 @gin.configurable
 def dataset_main(
         log_level: str,
-    ):
+):
     logging.basicConfig(level=log_level)
     dataset = make_dataset()
     return dataset
