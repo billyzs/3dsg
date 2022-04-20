@@ -163,9 +163,9 @@ class FilteredSceneGraphChangeDataset(InMemoryDataset):
                 for j in range(len(scan_id_set)):
                     if i != j:
                         _, nodes_1, edges_1 = build_scene_graph(self.objects_dict, self.relationships_dict,
-                                                                scan_id_set[i])
+                                                                scan_id_set[i], self.root)
                         _, nodes_2, edges_2 = build_scene_graph(self.objects_dict, self.relationships_dict,
-                                                                scan_id_set[j])
+                                                                scan_id_set[j], self.root)
                         if nodes_1 is not None and nodes_2 is not None:
                             node_embeddings, node_idxs = self.format_node_embeddings(nodes_1)
                             node_labels, node_masks = self.format_node_labels(nodes_2, node_idxs)

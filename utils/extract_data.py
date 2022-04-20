@@ -4,8 +4,6 @@ import networkx as nx
 from utils.data_vis import visualize_graph
 import numpy as np
 
-data_folder = "/home/sam/ethz/plr/plr-2022-predicting-changes/data/raw"
-
 
 def transform_locations(node_list, T):
     for i in range(len(node_list)):
@@ -51,12 +49,12 @@ def format_sem_seg_dict(sem_seg_dict):
     return object_dict
 
 
-def build_scene_graph(nodes_dict, edges_dict, scan_id):
+def build_scene_graph(nodes_dict, edges_dict, scan_id, root):
     if scan_id not in nodes_dict.keys() or scan_id not in edges_dict.keys():
         # print("No graph information for this scan")
         return None, None, None
 
-    scan_sem_seg_file = os.path.join(data_folder, "semantic_segmentation_data", scan_id, "semseg.v2.json")
+    scan_sem_seg_file = os.path.join(root, "semantic_segmentation_data", scan_id, "semseg.v2.json")
     if os.path.isfile(scan_sem_seg_file):
         semantic_seg = json.load(open(scan_sem_seg_file))
         object_pos_list = format_sem_seg_dict(semantic_seg)
@@ -123,6 +121,8 @@ def build_graph_time_series(scene_dict, objects_file, relationships_file, visual
 
 
 if __name__ == "__main__":
+    data_folder = "/home/sam/ethz/plr/plr-2022-predicting-changes/data/raw"
+
     scans = json.load(open(os.path.join(data_folder, "3RScan.json")))
     objects_in_file = os.path.join(data_folder, "scene-graphs", "objects.json")
     relationships_in_file = os.path.join(data_folder, "scene-graphs", "relationships.json")

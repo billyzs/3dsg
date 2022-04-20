@@ -179,8 +179,8 @@ class SceneGraphChangeDataset(InMemoryDataset):
             for i in range(len(scan_id_set)):
                 for j in range(len(scan_id_set)):
                     if i != j:
-                        _, nodes_1, edges_1 = build_scene_graph(self.objects_dict, self.relationships_dict, scan_id_set[i])
-                        _, nodes_2, edges_2 = build_scene_graph(self.objects_dict, self.relationships_dict, scan_id_set[j])
+                        _, nodes_1, edges_1 = build_scene_graph(self.objects_dict, self.relationships_dict, scan_id_set[i], self.root)
+                        _, nodes_2, edges_2 = build_scene_graph(self.objects_dict, self.relationships_dict, scan_id_set[j], self.root)
                         T_1I = scan_tf_set[i]
                         T_2I = scan_tf_set[j]
                         if nodes_1 is not None and nodes_2 is not None:
