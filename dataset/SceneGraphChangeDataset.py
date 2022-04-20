@@ -32,7 +32,7 @@ def get_relative_dist(node_1, node_2):
 
 
 class SceneGraphChangeDataset(InMemoryDataset):
-    def __init__(self, root, loc_mode="rel", label_mode="thresh", threshold=0, transform=None, pre_transform=None, pre_filter=None):
+    def __init__(self, root, loc_mode="rel", label_mode="thresh", threshold=0.1, transform=None, pre_transform=None, pre_filter=None):
         # Location representation mode
         #   "rel": Relative positions as graph node relationships,
         #   "global": Global position vectors as graph node attributes)
@@ -105,7 +105,7 @@ class SceneGraphChangeDataset(InMemoryDataset):
             embedding += node_embed
 
         if self.loc_mode == "global":
-            torch_embedding = torch.cat((torch.Tensor(embedding), torch.Tensor(node_dict["location"])), 0)
+            torch_embedding = torch.cat((torch.Tensor(embedding), torch.Tensor(node_dict["location"])[:, 0]), 0)
         else:
             torch_embedding = torch.Tensor(embedding)
 
@@ -189,7 +189,17 @@ class SceneGraphChangeDataset(InMemoryDataset):
                             node_embeddings, node_idxs = self.format_node_embeddings(transf_node_1)
                             node_labels, node_masks = self.format_node_labels(transf_node_1, transf_node_2, node_idxs)
                             edge_idx, edge_embeddings = self.format_edge_embeddings(transf_node_1, edges_1, node_idxs)
-                            sample = Data(x=node_embeddings, edge_index=edge_idx, edge_attr=edge_embeddings, y=node_labels, mask=node_masks)
+                            sample = Data(
+                                x=node_embeddings,
+                                edge_index=edge_idx,
+                                edge_attr=edge_embeddings,
+                                y=node_labels,
+                                mask=node_masks,
+                                input_graph=scan_id_set[i],
+                                output_graph=scan_id_set[j],
+                                input_tf=T_1I,
+                                output_tf=T_2I
+                            )
                             samples.append(sample)
 
         data, slices = self.collate(samples)
@@ -222,3 +232,26 @@ def dataset_main(
 if __name__ == "__main__":
     gin.parse_config_file("config.gin")
     d = dataset_main()
+    
+    data_folder = "/home/sam/ethz/plr/plr-2022-predicting-changes/data"
+    dataset = SceneGraphChangeDataset(data_folder, loc_mode="rel")
+
+    # Calculate Class Imbalance:
+    state_var = [0, 0]
+    pos_var = [0, 0]
+    node_var = [0, 0]
+    for i in range(len(dataset)):
+        data = dataset[i]
+        state_var[0] += torch.sum(data.y[:, 0])
+        pos_var[0] += torch.sum(data.y[:, 1])
+        node_var[0] += torch.sum(data.mask)
+
+        state_var[1] += torch.numel(data.y[:, 0])
+        pos_var[1] += torch.numel(data.y[:, 1])
+        node_var[1] += torch.numel(data.mask)
+
+    print("State Variability: {}/{}".format(state_var[0], state_var[1]))
+    print("Position Variability: {}/{}".format(pos_var[0], pos_var[1]))
+    print("Node Variability: {}/{}".format(node_var[0], node_var[1]))
+
+
