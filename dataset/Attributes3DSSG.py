@@ -1,6 +1,5 @@
 from typing import Tuple, List, Set
 from enum import IntEnum, unique
-from functools import cache
 
 
 @unique
@@ -9,7 +8,6 @@ class Attributes3DSSG(IntEnum):
         return super().__str__().replace("Attributes3DSSG.", "")
 
     @staticmethod
-    @cache
     def categories():
         return [
             "color",
@@ -24,13 +22,12 @@ class Attributes3DSSG(IntEnum):
         ]
 
     @staticmethod
-    @cache
     def key_to_value() -> dict:
-        return {str(x): x for x in Attributes3DSSG}
+        return {str(x.name): x.value for x in Attributes3DSSG}
 
     @staticmethod
     def to_enum(raw: str) -> "Attributes3DSSG":
-        e = raw.replace(":", "_").replace(" ", "_").replace("/", "_or_")
+        e = raw.replace(":", "_").replace(" ", "_").replace("/", "_or_").replace("-", "_").lower()
         try:
             return Attributes3DSSG.key_to_value()[e]
         except KeyError:

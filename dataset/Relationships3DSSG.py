@@ -5,6 +5,19 @@ from enum import IntEnum, unique
 class Relationships3DSSG(IntEnum):
     def __str__(self):
         return super().__str__().replace("Relationships","")
+
+    @staticmethod
+    def key_to_value() -> dict:
+        return {str(x.name): x.value for x in Relationships3DSSG}
+
+    @staticmethod
+    def to_enum(raw: str) -> "Relationships3DSSG":
+        e = raw.replace(":", "_").replace(" ", "_").replace("/", "_or_").replace("-", "_").lower()
+        try:
+            return Relationships3DSSG.key_to_value()[e]
+        except KeyError:
+            raise ValueError(f"{raw} cannot be converted to known attributes")
+
     none = 0
     supported_by = 1
     left = 2

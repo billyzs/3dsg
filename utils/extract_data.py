@@ -3,12 +3,14 @@ import json
 import networkx as nx
 from utils.data_vis import visualize_graph
 import numpy as np
+from typing import Dict, List, Tuple
+import torch
 
 
-def transform_locations(node_list, T):
+def transform_locations(node_list: List[Tuple], T: torch.Tensor) -> List[Tuple]:
     for i in range(len(node_list)):
-        location = node_list[i][1]["attributes"]["location"]
-        homogenous_location = np.expand_dims(np.concatenate((location, [1])), axis=1)
+        loc = node_list[i][1]["attributes"]["location"]
+        homogenous_location = torch.reshape(torch.Tensor([loc[0], loc[1], loc[2], 1]), (4, 1))
         # trans_mat = np.asarray(T).reshape((4, 4)).T
         ref_frame_location = T @ homogenous_location
         node_list[i][1]["attributes"]["location"] = ref_frame_location[:3]
@@ -33,7 +35,7 @@ def parse_nodelist(in_nodes, nodes_dict, label_dict):
     return nodes_dict, label_dict
 
 
-def format_scan_dict(unformated_dict, attribute):
+def format_scan_dict(unformated_dict: Dict, attribute: str) -> Dict:
     scan_list = unformated_dict["scans"]
     formatted_dict = {}
     for scan in scan_list:
@@ -41,7 +43,7 @@ def format_scan_dict(unformated_dict, attribute):
     return formatted_dict
 
 
-def format_sem_seg_dict(sem_seg_dict):
+def format_sem_seg_dict(sem_seg_dict: Dict) -> Dict:
     object_dict = {}
     for object in sem_seg_dict["segGroups"]:
         object_dict[object["id"]] = object["obb"]["centroid"]
@@ -49,23 +51,22 @@ def format_sem_seg_dict(sem_seg_dict):
     return object_dict
 
 
-def build_scene_graph(nodes_dict, edges_dict, scan_id, root):
+def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: str, graph_out=True) -> (nx.Graph, List[Tuple], List[Tuple]):
     if scan_id not in nodes_dict.keys() or scan_id not in edges_dict.keys():
         # print("No graph information for this scan")
         return None, None, None
 
-    scan_sem_seg_file = os.path.join(root, "semantic_segmentation_data", scan_id, "semseg.v2.json")
+    scan_sem_seg_file = os.path.join(root, "raw", "semantic_segmentation_data", scan_id, "semseg.v2.json")
     if os.path.isfile(scan_sem_seg_file):
         semantic_seg = json.load(open(scan_sem_seg_file))
         object_pos_list = format_sem_seg_dict(semantic_seg)
     else:
         print("No Semantic Segmentation File Available")
-        object_pos_list = None
+        return None, None, None
 
-    graph = nx.Graph()
+
     nodes = nodes_dict[scan_id]
     input_node_list = []
-    label_dict = {}
     for node in nodes:
         node_copy = node.copy()
         id = int(node["id"])
@@ -78,11 +79,15 @@ def build_scene_graph(nodes_dict, edges_dict, scan_id, root):
 
         att_dict["attributes"].pop("lexical", None)
         input_node_list.append((id, att_dict))
-        label_dict[node["id"]] = att_dict["label"]
-    graph.add_nodes_from(input_node_list)
     edges = edges_dict[scan_id]
-    for edge in edges:
-        graph.add_edge(edge[0], edge[1])
+
+    if graph_out:
+        graph = nx.Graph()
+        graph.add_nodes_from(input_node_list)
+        for edge in edges:
+            graph.add_edge(edge[0], edge[1])
+    else:
+        graph = None
 
     return graph, input_node_list, edges
 
@@ -95,7 +100,7 @@ def build_graph_time_series(scene_dict, objects_file, relationships_file, visual
 
     ref_scan = scene_dict["reference"]
     follow_scans = scene_dict["scans"]
-    scene_graph, nodes, edges = build_scene_graph(objects_dict, relationships_dict, ref_scan)
+    scene_graph, nodes, edges = build_scene_graph(objects_dict, relationships_dict, ref_scan, "")
     scene_graphs_over_time = [scene_graph]
     if nodes is not None:
         nodes_over_time, node_label_dict = parse_nodelist(nodes, {}, {})
@@ -108,7 +113,7 @@ def build_graph_time_series(scene_dict, objects_file, relationships_file, visual
 
     for scan in follow_scans:
         scan_id = scan["reference"]
-        scene_graph, nodes, edges = build_scene_graph(objects_dict, relationships_dict, scan_id)
+        scene_graph, nodes, edges = build_scene_graph(objects_dict, relationships_dict, scan_id, "")
         scene_graphs_over_time.append(scene_graph)
         if nodes is not None:
             transformed_nodes = transform_locations(nodes, scan["transform"])
@@ -131,5 +136,3 @@ if __name__ == "__main__":
 
     for scene in scans:
         scenegraph_ts, node_ts, edge_ts, label_dict = build_graph_time_series(scene, objects_in_file, relationships_in_file)
-
-
