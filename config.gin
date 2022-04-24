@@ -1,3 +1,0 @@
-dataset_main.log_level = "DEBUG"
-make_dataset.dataset_root = "/home/bzs/devel/euler/3dssg/3RScan/"
-make_dataset.allowed_attributes = ['state:new', 'state:old', "state:open", "state:dirty", "state:clean","state:empty", "state:full", "state:hanging", "state:half full/empty", "state:closed", "state:half open/closed", "state:messy", "state:tidy","state:on", "state:off", "state:down", "state:half up/down", "state:bare", "state:written on", "other:mobile", "other:rigid","other:nonrigid"]
