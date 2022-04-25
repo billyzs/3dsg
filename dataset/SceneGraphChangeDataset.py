@@ -26,13 +26,10 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
 
 
 class SceneGraphChangeDataset(InMemoryDataset):
-    def __init__(self, cfg: DatasetCfg, transform=None, pre_transform=None, pre_filter=None):
 
-        self.cfg: DatasetCfg = cfg
-        root: str = cfg.root
 
+    def _load_raw_files(self):
         # Load raw data files as per standard dataset folder organization
-        self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
         self.scans: List[Dict] = json.load(open(os.path.join(root, "raw", "3RScan.json")))
         object_data: Dict = json.load(open(os.path.join(root, "raw", "scene-graphs", "objects.json")))
         relationship_data: Dict = json.load(open(os.path.join(root, "raw", "scene-graphs", "relationships.json")))
@@ -43,6 +40,13 @@ class SceneGraphChangeDataset(InMemoryDataset):
         self.edge_embedder: BinaryEdgeEmbedding = BinaryEdgeEmbedding(cfg=DatasetCfg.relationships)
         self.variability_embedder: BinaryVariabilityEmbedding = BinaryVariabilityEmbedding(cfg=DatasetCfg.variability)
 
+
+    def __init__(self, cfg: DatasetCfg, transform=None, pre_transform=None, pre_filter=None):
+
+        self.cfg: DatasetCfg = cfg
+        root: str = cfg.root
+
+        self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
@@ -51,6 +55,11 @@ class SceneGraphChangeDataset(InMemoryDataset):
         if os.path.isfile(self.raw_files):
             with open(self.raw_files) as f:
                 files = f.read().splitlines()
+        else:
+            files = ["3RScan.json",
+                     "scene-graphs/objects.json",
+                     "scene-graphs/relationships.json",
+                     ]
         return files
 
     @property
@@ -61,6 +70,7 @@ class SceneGraphChangeDataset(InMemoryDataset):
         raise Exception("Files Not Found. Download dataset files as per standard format")
 
     def process(self):
+        self._load_raw_files()
         samples = []
         for scene in tqdm(self.scans):
             scan_id_set, scan_tf_set = get_scene_list(scene)
@@ -101,21 +111,3 @@ if __name__ == "__main__":
     cur_cfg = DatasetCfg()
     cur_cfg.root = '/home/bzs/devel/euler/3dssg/3RScan/'
     dataset = SceneGraphChangeDataset(cur_cfg)
-
-    # Calculate Class Imbalance:
-    state_var = [0, 0]
-    pos_var = [0, 0]
-    node_var = [0, 0]
-    for i in range(len(dataset)):
-        data = dataset[i]
-        state_var[0] += torch.sum(data.y[:, 0])
-        pos_var[0] += torch.sum(data.y[:, 1])
-        node_var[0] += torch.sum(data.y[:, 2])
-
-        state_var[1] += torch.numel(data.y[:, 0])
-        pos_var[1] += torch.numel(data.y[:, 1])
-        node_var[1] += torch.numel(data.y[:, 2])
-
-    print("State Variability: {}/{}".format(state_var[0], state_var[1]))
-    print("Position Variability: {}/{}".format(pos_var[0], pos_var[1]))
-    print("Node Variability: {}/{}".format(node_var[0], node_var[1]))
