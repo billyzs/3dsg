@@ -30,6 +30,7 @@ class SceneGraphChangeDataset(InMemoryDataset):
 
     def _load_raw_files(self):
         # Load raw data files as per standard dataset folder organization
+        root: str = self.cfg.root
         self.scans: List[Dict] = json.load(open(os.path.join(root, "raw", "3RScan.json")))
         object_data: Dict = json.load(open(os.path.join(root, "raw", "scene-graphs", "objects.json")))
         relationship_data: Dict = json.load(open(os.path.join(root, "raw", "scene-graphs", "relationships.json")))
@@ -45,7 +46,6 @@ class SceneGraphChangeDataset(InMemoryDataset):
 
         self.cfg: DatasetCfg = cfg
         root: str = cfg.root
-
         self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])

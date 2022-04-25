@@ -51,7 +51,7 @@ def format_sem_seg_dict(sem_seg_dict: Dict) -> Dict:
     return object_dict
 
 
-def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: str, graph_out=True) -> (nx.Graph, List[Tuple], List[Tuple]):
+def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: str, graph_out=False) -> (nx.Graph, List[Tuple], List[Tuple]):
     if scan_id not in nodes_dict.keys() or scan_id not in edges_dict.keys():
         # print("No graph information for this scan")
         return None, None, None
@@ -80,7 +80,6 @@ def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: st
         att_dict["attributes"].pop("lexical", None)
         input_node_list.append((id, att_dict))
     edges = edges_dict[scan_id]
-
     if graph_out:
         graph = nx.Graph()
         graph.add_nodes_from(input_node_list)
