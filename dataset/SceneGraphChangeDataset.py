@@ -2,11 +2,11 @@ import torch
 import os
 from torch_geometric.data import InMemoryDataset, Data
 import json
+from AttributeEmbedding import BinaryNodeEmbedding
+from RelationshipEmbedding import BinaryEdgeEmbedding
+from VariabilityEmbedding import BinaryVariabilityEmbedding
+from DatasetCfg import DatasetCfg
 from utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
-from dataset.AttributeEmbedding import BinaryNodeEmbedding
-from dataset.RelationshipEmbedding import BinaryEdgeEmbedding
-from dataset.VariabilityEmbedding import BinaryVariabilityEmbedding
-from dataset.DatasetCfg import DatasetCfg
 from typing import List, Dict
 import numpy as np
 from tqdm import tqdm
@@ -99,6 +99,7 @@ class SceneGraphChangeDataset(InMemoryDataset):
 
 if __name__ == "__main__":
     cur_cfg = DatasetCfg()
+    cur_cfg.root = '/home/bzs/devel/euler/3dssg/3RScan/'
     dataset = SceneGraphChangeDataset(cur_cfg)
 
     # Calculate Class Imbalance:

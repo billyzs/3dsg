@@ -5,7 +5,7 @@ from typing import List
 @dataclass
 class DatasetCfg:
     # Directory containing all raw data as per the specified file structure
-    root: str = "/home/sam/ethz/plr/plr-2022-predicting-changes/data"
+    root: str = "/cluster/work/riner/users/PLR-2022/3dssg/3RScan"
 
     # Parameters for attribute embedding
     class AttributeParams:

@@ -2,7 +2,7 @@ from collections import OrderedDict
 from Attributes3DSSG import Attributes3DSSG
 from Taxonomy3DSSG import Objects3DSSG
 import logging
-from dataset.DatasetCfg import DatasetCfg
+from DatasetCfg import DatasetCfg
 import torch
 from typing import List, Dict, Tuple
 logger = logging.getLogger(__name__)

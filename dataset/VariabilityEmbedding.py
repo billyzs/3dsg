@@ -1,4 +1,4 @@
-from dataset.DatasetCfg import DatasetCfg
+from DatasetCfg import DatasetCfg
 import logging
 import torch
 from typing import List, Dict, Tuple
