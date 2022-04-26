@@ -26,7 +26,7 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
     return scan_id_set, scan_tf_set
 
 
-@gin.configurable
+# @gin.configurable
 class SceneGraphChangeDataset(InMemoryDataset):
 
 
@@ -47,6 +47,8 @@ class SceneGraphChangeDataset(InMemoryDataset):
     def __init__(self, root: str = '', cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
 
         self.cfg: DatasetCfg = cfg
+        if not root:
+            root = self.cfg.root
         if root and cfg:
             self.cfg.root = root
         self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
@@ -115,4 +117,4 @@ class SceneGraphChangeDataset(InMemoryDataset):
 if __name__ == "__main__":
     cur_cfg = DatasetCfg()
     cur_cfg.root = '/home/bzs/devel/euler/3dssg/3RScan/'
-    dataset = SceneGraphChangeDataset(cur_cfg)
+    dataset = SceneGraphChangeDataset(cfg=cur_cfg)

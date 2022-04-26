@@ -30,6 +30,7 @@ class AllowList:
             [True] * self.post_offset)
 
 
+# see usage below
 @gin.configurable
 class RelationshipsAllowList(AllowList):
     enum_cls: IntEnum = Relationships3DSSG
@@ -38,6 +39,7 @@ class RelationshipsAllowList(AllowList):
         return graph
 
 
+# see usage below
 @gin.configurable
 class AttributesAllowList(AllowList):
     enum_cls: IntEnum = Attributes3DSSG
@@ -46,14 +48,18 @@ class AttributesAllowList(AllowList):
         return graph
 
 
+# see usage below
 @gin.configurable
 @dataclass
 class TransformPipeline:
-    steps: InitVar([])
+    steps: InitVar([])  # ordered sequence of graph transform steps; ideally
+    # should be classes that are configurable by gin (hence __init__ takes no arguments);
+    # should define a __call__(self, graph: Data) -> Data method that performs the transform
     def __post_init__(self, steps):
         self.instances = [c() for c in steps]
 
 
+    # chains the specified transforms and perform them
     def __call__(self, arg):
         for proc in self.instances:
             arg = proc(arg)
@@ -63,6 +69,7 @@ class TransformPipeline:
 if __name__ == "__main__":
     import copy
     from SceneGraphChangeDataset import SceneGraphChangeDataset
+    # can go into a file, or ad hoc as python string literals
     config = [
         "SceneGraphChangeDataset.root = '/home/bzs/devel/euler/3dssg/3RScan/'",
         "AttributesAllowList.allowed_items = ['state_open', 'state_closed']",
@@ -76,10 +83,3 @@ if __name__ == "__main__":
     gin.parse_config(config)
     dataset = SceneGraphChangeDataset()
     ra = TransformPipeline()
-
-    # import pickle
-    # with open("complete_graph.pickle", 'rb') as f:
-        # g = pickle.load(f)
-    # gp = copy.deepcopy(g)
-    # gp = ra(g)
-

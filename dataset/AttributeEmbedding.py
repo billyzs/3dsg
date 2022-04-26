@@ -13,68 +13,33 @@ class BinaryNodeEmbedding:
         self.att_cfg: DatasetCfg.AttributeParams = att_cfg
         self.obj_cfg: DatasetCfg.ObjectParams = obj_cfg
         self.loc: bool = att_cfg.global_loc
-        self.obj_mode: str = obj_cfg.mode
-        self.allowlist: List[str] = att_cfg.allowed_attributes
-        self.attributes: Dict[List] = self.build_attribute_set()
-        self.objects: List[str] = self.build_object_set()
 
-    # Creates a consistent ordered dictionary of attributes used for binary embedding
-    def build_attribute_set(self) -> Dict:
-        if self.allowlist is None:
-            raise ValueError("no attributes specified to build node embedding")
-        logger.info(f"processing {self.allowlist=}")
-        attributes = OrderedDict()  # import to keep order for consistency
-
-        # will raise if input invalid
-        attr_enum = {Attributes3DSSG.to_enum(a): a for a in self.allowlist}
-        enums = sorted(list(attr_enum.keys()))
-        for e in enums:
-            attr = attr_enum[e]
-            category, val = attr.split(":")
-            attributes.setdefault(category, []).append(val)
-        logger.info(f"allowing the following attributes: {attributes}")
-        return attributes
-
-    # Creates a consistent ordered dictionary of attributes used for binary embedding
-    def build_object_set(self) -> List[str]:
-        if self.obj_mode == "full":
-            object_set = [obj.name for obj in Objects3DSSG]
-        else:
-            raise Exception("Currently not supporting any other object mode")
-
-        return object_set
 
     # Generates tensor of embeddings for a single graph sample
     def generate_node_embeddings(self, node_list: List[Tuple]) -> (torch.Tensor, List):
         node_dict = {node[0]: node[1] for node in node_list}
         node_ids = sorted(list(node_dict.keys()))
         num_nodes = len(node_ids)
-        node_embeddings = []
+        attribute_embeddings = torch.zeros((num_nodes, len(Attributes3DSSG)))
         node_locations = torch.zeros((num_nodes, 3))
         node_classifications = torch.zeros((num_nodes, 1))
 
         for idx, node in enumerate(node_ids):
-            node_embedding = self.calc_node_embedding(node_dict[node]["attributes"])
-            node_embeddings.append(node_embedding)
+            attribute_embeddings[idx, :] = self.calc_node_embedding(node_dict[node]["attributes"])
             node_locations[idx, :] = node_dict[node]["attributes"]["location"].flatten()
             node_classifications[idx] = int(node_dict[node]["global_id"])
 
-        node_embeddings = torch.cat(node_embeddings, 0)
-        return node_embeddings, node_ids, node_locations, node_classifications
+        if self.loc:
+            attribute_embeddings = torch.hstack([attribute_embeddings, node_locations])
+        return attribute_embeddings, node_ids, node_locations, node_classifications
 
     def calc_node_embedding(self, node_dict: Dict) -> torch.Tensor:
         # Current embedding method: not embedding objects, embedding all attributes as binary variable
-        embedding = []
-        for att_type in self.attributes.keys():
-            node_embed = [0] * len(self.attributes[att_type])
-            if att_type in node_dict.keys():
-                for att in node_dict[att_type]:
-                    node_embed[self.attributes[att_type].index(att)] = 1
-            embedding += node_embed
-
-        if self.loc:
-            torch_embedding = torch.cat((torch.Tensor(embedding), torch.Tensor(node_dict["location"])[:, 0]), 0)
-        else:
-            torch_embedding = torch.Tensor(embedding)
-
+        raw_embedding: List[str] = []
+        for (key, val) in node_dict.items():
+            if key != "location":
+                for v in val:
+                    raw_embedding.append("_".join([key, v]))
+        raw_embedding = [str(Attributes3DSSG.to_enum(r)) for r in raw_embedding]
+        torch_embedding = torch.tensor(Attributes3DSSG.binary_encode(raw_embedding))
         return torch.unsqueeze(torch_embedding, 0)
