@@ -1,6 +1,7 @@
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,python,kdevelop4,windows,vim,virtualenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,python,kdevelop4,windows,vim,virtualenv
+dataset_root.gin
 
 3DSSG/
 *.zip
