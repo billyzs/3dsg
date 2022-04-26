@@ -20,9 +20,9 @@ class BinaryNodeEmbedding:
         node_dict = {node[0]: node[1] for node in node_list}
         node_ids = sorted(list(node_dict.keys()))
         num_nodes = len(node_ids)
-        attribute_embeddings = torch.zeros((num_nodes, len(Attributes3DSSG)))
-        node_locations = torch.zeros((num_nodes, 3))
-        node_classifications = torch.zeros((num_nodes, 1))
+        attribute_embeddings = torch.zeros((num_nodes, len(Attributes3DSSG)), dtype=torch.float)
+        node_locations = torch.zeros((num_nodes, 3), dtype=torch.float)
+        node_classifications = torch.zeros((num_nodes, 1), dtype=torch.float)
 
         for idx, node in enumerate(node_ids):
             attribute_embeddings[idx, :] = self.calc_node_embedding(node_dict[node]["attributes"])
