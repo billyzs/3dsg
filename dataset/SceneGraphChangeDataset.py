@@ -10,6 +10,7 @@ from utils.extract_data import build_scene_graph, format_scan_dict, transform_lo
 from typing import List, Dict
 import numpy as np
 from tqdm import tqdm
+import gin
 
 
 def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
@@ -25,6 +26,7 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
     return scan_id_set, scan_tf_set
 
 
+@gin.configurable
 class SceneGraphChangeDataset(InMemoryDataset):
 
 
@@ -42,10 +44,11 @@ class SceneGraphChangeDataset(InMemoryDataset):
         self.variability_embedder: BinaryVariabilityEmbedding = BinaryVariabilityEmbedding(cfg=DatasetCfg.variability)
 
 
-    def __init__(self, cfg: DatasetCfg, transform=None, pre_transform=None, pre_filter=None):
+    def __init__(self, root: str = '', cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
 
         self.cfg: DatasetCfg = cfg
-        root: str = cfg.root
+        if root and cfg:
+            self.cfg.root = root
         self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])

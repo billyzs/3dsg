@@ -1,38 +1,51 @@
+from collections.abc import Sequence
 from typing import Tuple, List, Set
 from enum import IntEnum, unique
-
+from functools import cache
 
 @unique
 class Attributes3DSSG(IntEnum):
     def __str__(self) -> str:
-        return super().__str__().replace("Attributes3DSSG.", "")
+        return super().__str__().replace("Attributes3DSSG.","")
 
     @staticmethod
+    def binary_encode(rels: Sequence[str]) -> list[bool]:
+        ret = [False] * len(Attributes3DSSG)
+        rel_idx = [Attributes3DSSG.key_to_value(r) for r in rels]
+        for r in rel_idx:
+            ret[r] = True
+        return ret
+
+    @staticmethod
+    def key_to_value(key: str) -> "Attributes3DSSG":
+        @cache
+        def mapping():
+            return {str(x): x for x in Attributes3DSSG}
+        return mapping()[key]
+
+
+    @staticmethod
+    @cache
     def categories():
         return [
-            "color",
-            "shape",
-            "style",
-            "state",
-            "size",
-            "material",
-            "texture",
-            "other",
-            "symmetry",
-        ]
-
-    @staticmethod
-    def key_to_value() -> dict:
-        return {str(x.name): x.value for x in Attributes3DSSG}
+        "color",
+        "shape",
+        "style",
+        "state",
+        "size",
+        "material",
+        "texture",
+        "other",
+        "symmetry",
+    ]
 
     @staticmethod
     def to_enum(raw: str) -> "Attributes3DSSG":
         e = raw.replace(":", "_").replace(" ", "_").replace("/", "_or_").replace("-", "_").lower()
         try:
-            return Attributes3DSSG.key_to_value()[e]
+            return Attributes3DSSG.key_to_value(e)
         except KeyError:
             raise ValueError(f"{raw} cannot be converted to known attributes")
-
     color_white = 0
     color_black = 1
     color_green = 2

@@ -1,22 +1,37 @@
+from collections.abc import Sequence
 from enum import IntEnum, unique
-
+from functools import cache
 
 @unique
 class Relationships3DSSG(IntEnum):
     def __str__(self):
         return super().__str__().replace("Relationships","")
 
+
     @staticmethod
-    def key_to_value() -> dict:
-        return {str(x.name): x.value for x in Relationships3DSSG}
+    def key_to_value(key: str) -> "Relationships3DSSG":
+        @cache
+        def mapping():
+            return {str(x).split(".")[-1]: x for x in Relationships3DSSG}
+        return mapping()[key]
+
+
+    @staticmethod
+    def binary_encode(rels: Sequence[str]) -> list[bool]:
+        ret = [False] * len(Relationships3DSSG)
+        rel_idx = [Relationships3DSSG.key_to_value(r) for r in rels]
+        for r in rel_idx:
+            ret[r] = True
+        return ret
 
     @staticmethod
     def to_enum(raw: str) -> "Relationships3DSSG":
         e = raw.replace(":", "_").replace(" ", "_").replace("/", "_or_").replace("-", "_").lower()
         try:
-            return Relationships3DSSG.key_to_value()[e]
+            return Relationships3DSSG.key_to_value(e)
         except KeyError:
             raise ValueError(f"{raw} cannot be converted to known attributes")
+
 
     none = 0
     supported_by = 1
@@ -59,4 +74,3 @@ class Relationships3DSSG(IntEnum):
     brighter_than = 38
     darker_than = 39
     more_comfortable_than = 40
-    num_relationships = 41
