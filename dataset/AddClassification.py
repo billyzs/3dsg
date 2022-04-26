@@ -8,9 +8,9 @@ import gin
 logger = logging.getLogger(__name__)
 
 
-@gin.configurable
 @dataclass
-class Addclassification:
+@gin.configurable
+class AddClassification:
     method: str = "simple"
     def _simple_add_classification(self, graph: Data) -> Data:
         graph.x = torch.hstack((graph.x, graph.classifications))

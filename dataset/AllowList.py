@@ -1,5 +1,5 @@
 from typing import List
-from collections.abc import Sequence
+from collections.abc import Sequence, Callable
 from dataclasses import dataclass, field, InitVar
 from torch_geometric.data import Data
 from .Relationships3DSSG import Relationships3DSSG
@@ -57,15 +57,16 @@ class TransformPipeline:
     steps: InitVar([])  # ordered sequence of graph transform steps; ideally
     # should be classes that are configurable by gin (hence __init__ takes no arguments);
     # should define a __call__(self, graph: Data) -> Data method that performs the transform
+
     def __post_init__(self, steps):
-        self.instances = [c() for c in steps]
+        super().__setattr__("instances", [cls() for cls in steps])
 
 
     # chains the specified transforms and perform them
-    def __call__(self, arg):
+    def __call__(self, graph: Data) -> Data:
         for proc in self.instances:
-            arg = proc(arg)
-        return arg
+            graph = proc(graph)
+        return graph
 
 
 if __name__ == "__main__":
