@@ -2,11 +2,11 @@ import torch
 import os
 from torch_geometric.data import InMemoryDataset, Data
 import json
-from AttributeEmbedding import BinaryNodeEmbedding
-from RelationshipEmbedding import BinaryEdgeEmbedding
-from VariabilityEmbedding import BinaryVariabilityEmbedding
-from DatasetCfg import DatasetCfg
-from utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
+from .AttributeEmbedding import BinaryNodeEmbedding
+from .RelationshipEmbedding import BinaryEdgeEmbedding
+from .VariabilityEmbedding import BinaryVariabilityEmbedding
+from .DatasetCfg import DatasetCfg
+from .utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
 from typing import List, Dict
 import numpy as np
 from tqdm import tqdm
@@ -51,8 +51,9 @@ class SceneGraphChangeDataset(InMemoryDataset):
             root = self.cfg.root
         if root and cfg:
             self.cfg.root = root
+        self.root = root
         self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
-        super().__init__(root, transform, pre_transform, pre_filter)
+        super().__init__(self.root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
     @property
@@ -113,8 +114,3 @@ class SceneGraphChangeDataset(InMemoryDataset):
         data, slices = self.collate(samples)
         torch.save((data, slices), self.processed_paths[0])
 
-
-if __name__ == "__main__":
-    cur_cfg = DatasetCfg()
-    cur_cfg.root = '/home/bzs/devel/euler/3dssg/3RScan/'
-    dataset = SceneGraphChangeDataset(cfg=cur_cfg)

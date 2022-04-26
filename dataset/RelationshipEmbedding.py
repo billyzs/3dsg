@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from Relationships3DSSG import Relationships3DSSG
-from DatasetCfg import DatasetCfg
+from .Relationships3DSSG import Relationships3DSSG
+from .DatasetCfg import DatasetCfg
 import itertools
 import logging
 import torch

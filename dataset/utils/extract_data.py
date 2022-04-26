@@ -1,7 +1,7 @@
 import os
 import json
 import networkx as nx
-from utils.data_vis import visualize_graph
+from dataset.utils.data_vis import visualize_graph
 import numpy as np
 from typing import Dict, List, Tuple
 import torch
