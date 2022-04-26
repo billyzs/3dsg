@@ -95,3 +95,5 @@ matplotlib~=3.5.1
 numpy~=1.21.2
 tqdm~=4.63.1
 gin~=0.1.6
+dash
+dash-bootstrap-components

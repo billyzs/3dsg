@@ -36,6 +36,7 @@ class RelationshipsAllowList(AllowList):
     enum_cls: IntEnum = Relationships3DSSG
     def __call__(self, graph: Data) -> Data:
         graph.edge_attr = graph.edge_attr[:, self.allow_mask]
+        graph.relationships_allow_mask = self.allow_mask
         return graph
 
 
@@ -45,6 +46,7 @@ class AttributesAllowList(AllowList):
     enum_cls: IntEnum = Attributes3DSSG
     def __call__(self, graph: Data) -> Data:
         graph.x= graph.x[:, self.allow_mask]
+        graph.attributes_allow_mask = self.allow_mask
         return graph
 
 

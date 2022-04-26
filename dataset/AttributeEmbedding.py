@@ -30,7 +30,7 @@ class BinaryNodeEmbedding:
             node_classifications[idx] = int(node_dict[node]["global_id"])
 
         if self.loc:
-            attribute_embeddings = torch.hstack([attribute_embeddings, node_locations])
+            attribute_embeddings = torch.hstack((attribute_embeddings, node_locations))
         return attribute_embeddings, node_ids, node_locations, node_classifications
 
     def calc_node_embedding(self, node_dict: Dict) -> torch.Tensor:

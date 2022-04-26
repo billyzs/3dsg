@@ -26,7 +26,7 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
     return scan_id_set, scan_tf_set
 
 
-# @gin.configurable
+@gin.configurable
 class SceneGraphChangeDataset(InMemoryDataset):
 
 

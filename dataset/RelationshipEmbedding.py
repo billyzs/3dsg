@@ -40,6 +40,7 @@ class BinaryEdgeEmbedding:
             if rel is not None:
                 _edge_embeds_tensor[idx, rel] = 1
         if self.loc:
+            # normalize using the largest distance found in graph
             dist = torch.norm(relative_loc, p=2, dim=1)
             max_dist = torch.max(dist)
             dist = dist / max_dist
