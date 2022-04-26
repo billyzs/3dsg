@@ -61,7 +61,7 @@ def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: st
         semantic_seg = json.load(open(scan_sem_seg_file))
         object_pos_list = format_sem_seg_dict(semantic_seg)
     else:
-        print("No Semantic Segmentation File Available")
+        print(f"No Semantic Segmentation File Available for {scan_id}")
         return None, None, None
 
 

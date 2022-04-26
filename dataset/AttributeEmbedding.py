@@ -46,14 +46,21 @@ class BinaryNodeEmbedding:
 
     # Generates tensor of embeddings for a single graph sample
     def generate_node_embeddings(self, node_list: List[Tuple]) -> (torch.Tensor, List):
+        node_dict = {node[0]: node[1] for node in node_list}
+        node_ids = sorted(list(node_dict.keys()))
+        num_nodes = len(node_ids)
         node_embeddings = []
-        node_ids = []
-        for node in node_list:
-            node_embedding = self.calc_node_embedding(node[1]["attributes"])
-            node_embeddings.append(node_embedding)
-            node_ids.append(node[0])
+        node_locations = torch.zeros((num_nodes, 3))
+        node_classifications = torch.zeros((num_nodes, 1))
 
-        return torch.cat(node_embeddings, 0), node_ids
+        for idx, node in enumerate(node_ids):
+            node_embedding = self.calc_node_embedding(node_dict[node]["attributes"])
+            node_embeddings.append(node_embedding)
+            node_locations[idx, :] = node_dict[node]["attributes"]["location"].flatten()
+            node_classifications[idx] = int(node_dict[node]["global_id"])
+
+        node_embeddings = torch.cat(node_embeddings, 0)
+        return node_embeddings, node_ids, node_locations, node_classifications
 
     def calc_node_embedding(self, node_dict: Dict) -> torch.Tensor:
         # Current embedding method: not embedding objects, embedding all attributes as binary variable

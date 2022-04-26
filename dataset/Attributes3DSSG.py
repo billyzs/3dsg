@@ -33,7 +33,6 @@ class Attributes3DSSG(IntEnum):
         except KeyError:
             raise ValueError(f"{raw} cannot be converted to known attributes")
 
-    none = -1
     color_white = 0
     color_black = 1
     color_green = 2
@@ -127,4 +126,3 @@ class Attributes3DSSG(IntEnum):
     symmetry_1_plane = 90
     symmetry_2_planes = 91
     symmetry_infinite_planes = 92
-    num_attributes = 93
