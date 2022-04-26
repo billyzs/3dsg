@@ -1,11 +1,16 @@
 import os
 import json
-import networkx as nx
-from dataset.utils.data_vis import visualize_graph
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import torch
 
+
+def visualize_graph(*a, **kw):
+    try:
+        from dataset.utils.data_vis import visualize_graph as v
+        v(*a, **kw)
+    except ImportError:
+        pass
 
 def transform_locations(node_list: List[Tuple], T: torch.Tensor) -> List[Tuple]:
     for i in range(len(node_list)):
@@ -51,7 +56,7 @@ def format_sem_seg_dict(sem_seg_dict: Dict) -> Dict:
     return object_dict
 
 
-def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: str, graph_out=False) -> (nx.Graph, List[Tuple], List[Tuple]):
+def build_scene_graph(nodes_dict: Dict, edges_dict: Dict, scan_id: str, root: str, graph_out=False) -> (Optional, List[Tuple], List[Tuple]):
     if scan_id not in nodes_dict.keys() or scan_id not in edges_dict.keys():
         # print("No graph information for this scan")
         return None, None, None

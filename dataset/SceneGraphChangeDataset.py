@@ -9,7 +9,6 @@ from .DatasetCfg import DatasetCfg
 from .utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
 from typing import List, Dict
 import numpy as np
-from tqdm import tqdm
 import gin
 
 
@@ -32,7 +31,10 @@ class SceneGraphChangeDataset(InMemoryDataset):
 
     def _load_raw_files(self):
         # Load raw data files as per standard dataset folder organization
-        root: str = self.cfg.root
+        if self.cfg:
+            root: str = self.cfg.root
+        else:
+            root = self.root
         self.scans: List[Dict] = json.load(open(os.path.join(root, "raw", "3RScan.json")))
         object_data: Dict = json.load(open(os.path.join(root, "raw", "scene-graphs", "objects.json")))
         relationship_data: Dict = json.load(open(os.path.join(root, "raw", "scene-graphs", "relationships.json")))
@@ -78,6 +80,10 @@ class SceneGraphChangeDataset(InMemoryDataset):
     def process(self):
         self._load_raw_files()
         samples = []
+        try:
+            from tqdm import tqdm
+        except ImportError:
+            tqdm = lambda x: (_ for _ in x)
         for scene in tqdm(self.scans):
             scan_id_set, scan_tf_set = get_scene_list(scene)
             for i in range(len(scan_id_set)):
