@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 import meshio
 import plotly.graph_objects as gobj
-from dataset import Objects3DSSG, Relationships3DSSG, Attributes3DSSG, SceneGraphChangeDataset
+from dataset import *
 from torch_geometric.data import Data
 from collections.abc import Sequence
 
@@ -121,11 +121,6 @@ def visualize_one_graph(root: str, graph: Data):
 
 
 def load_dataset():
-    # run at top level dir with python ./visualize_graph.py config.gin
-    import sys
-    import gin
-    config_file = sys.argv[1]
-    gin.parse_config_file(config_file)
     dataset = SceneGraphChangeDataset()
     global root
     root = dataset.root
@@ -180,6 +175,11 @@ def dash_app(dataset, scan_id_to_idx):
 
 
 if __name__ == "__main__":
+    # run at top level dir with python ./visualize_graph.py config.gin
+    import sys
+    import gin
+    config_files = sys.argv[1:]
+    gin.parse_config_files_and_bindings(config_files, "")
     dataset = load_dataset()
     scan_id_to_idx = {d.input_graph: idx for idx, d in enumerate(dataset)}
     app = dash_app(dataset, scan_id_to_idx)

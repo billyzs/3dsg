@@ -5,7 +5,6 @@ from torch_geometric.data import Data
 from .Relationships3DSSG import Relationships3DSSG
 from .Attributes3DSSG import Attributes3DSSG
 from enum import IntEnum
-import torch
 import logging
 import gin
 
