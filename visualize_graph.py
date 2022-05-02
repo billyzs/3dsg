@@ -117,6 +117,7 @@ def visualize_one_graph(root: str, graph: Data):
     fig = gobj.Figure(
         data=_plots,
     )
+    fig.update_scenes({"aspectmode":"data"})
     return fig
 
 
