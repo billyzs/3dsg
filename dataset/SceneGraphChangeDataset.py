@@ -8,7 +8,6 @@ from .VariabilityEmbedding import BinaryVariabilityEmbedding
 from .DatasetCfg import DatasetCfg
 from .utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
 from typing import List, Dict
-import numpy as np
 import gin
 
 
@@ -27,7 +26,16 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
 
 @gin.configurable
 class SceneGraphChangeDataset(InMemoryDataset):
-
+    def __init__(self, root=None, cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
+        self.cfg: DatasetCfg = cfg
+        if not root:
+            root = self.cfg.root
+        if root and cfg:
+            self.cfg.root = root
+        self.root = root
+        self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
+        super().__init__(self.root, transform, pre_transform, pre_filter)
+        self.data, self.slices = torch.load(self.processed_paths[0])
 
     def _load_raw_files(self):
         # Load raw data files as per standard dataset folder organization
@@ -44,19 +52,6 @@ class SceneGraphChangeDataset(InMemoryDataset):
         self.node_embedder: BinaryNodeEmbedding = BinaryNodeEmbedding(att_cfg=DatasetCfg.attributes, obj_cfg=DatasetCfg.objects)
         self.edge_embedder: BinaryEdgeEmbedding = BinaryEdgeEmbedding(cfg=DatasetCfg.relationships)
         self.variability_embedder: BinaryVariabilityEmbedding = BinaryVariabilityEmbedding(cfg=DatasetCfg.variability)
-
-
-    def __init__(self, root: str = '', cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
-
-        self.cfg: DatasetCfg = cfg
-        if not root:
-            root = self.cfg.root
-        if root and cfg:
-            self.cfg.root = root
-        self.root = root
-        self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
-        super().__init__(self.root, transform, pre_transform, pre_filter)
-        self.data, self.slices = torch.load(self.processed_paths[0])
 
     @property
     def raw_file_names(self):

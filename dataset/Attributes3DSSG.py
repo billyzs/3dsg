@@ -1,15 +1,14 @@
 from collections.abc import Sequence
 from typing import Tuple, List, Set
 from enum import IntEnum, unique
-from functools import cache
 
 @unique
 class Attributes3DSSG(IntEnum):
     def __str__(self) -> str:
-        return super().__str__().replace("Attributes3DSSG.","")
+        return super().__str__().replace("Attributes3DSSG.", "")
 
     @staticmethod
-    def binary_encode(rels: Sequence[str]) -> list[bool]:
+    def binary_encode(rels: Sequence) -> List[bool]:
         ret = [False] * len(Attributes3DSSG)
         rel_idx = [Attributes3DSSG.key_to_value(r) for r in rels]
         for r in rel_idx:
@@ -18,14 +17,12 @@ class Attributes3DSSG(IntEnum):
 
     @staticmethod
     def key_to_value(key: str) -> "Attributes3DSSG":
-        @cache
         def mapping():
             return {str(x): x for x in Attributes3DSSG}
         return mapping()[key]
 
 
     @staticmethod
-    @cache
     def categories():
         return [
         "color",

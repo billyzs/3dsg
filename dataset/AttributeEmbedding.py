@@ -14,7 +14,6 @@ class BinaryNodeEmbedding:
         self.obj_cfg: DatasetCfg.ObjectParams = obj_cfg
         self.loc: bool = att_cfg.global_loc
 
-
     # Generates tensor of embeddings for a single graph sample
     def generate_node_embeddings(self, node_list: List[Tuple]) -> (torch.Tensor, List):
         node_dict = {node[0]: node[1] for node in node_list}

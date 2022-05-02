@@ -28,7 +28,7 @@ class BinaryEdgeEmbedding:
 
         edge_map: Dict[Tuple[int, int], int] = {(node_local_id_to_idx[e[0]],\
             node_local_id_to_idx[e[1]]): e[2]-1 for e in edges}
-        relative_loc = torch.zeros(num_edges, 3, dtype=torch.float64)
+        relative_loc = torch.zeros(num_edges, 3, dtype=torch.float32)
         _edge_idx_tensor = torch.zeros((2, num_edges), dtype=torch.int64)
         _edge_embeds_tensor = torch.zeros(num_edges, self.n, dtype=torch.int64)
         for (idx, (fr, to)) in enumerate(itertools.permutations(range(num_nodes), 2)):

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class AllowList:
     allowed_items: List[str]
-    allow_mask: Sequence[bool] = field(init=False)
+    allow_mask: Sequence = field(init=False)
     pre_offset: int
     post_offset: int
 

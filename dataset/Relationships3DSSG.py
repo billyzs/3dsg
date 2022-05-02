@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from enum import IntEnum, unique
-from functools import cache
+from typing import Tuple, List, Set
 
 @unique
 class Relationships3DSSG(IntEnum):
@@ -10,14 +10,13 @@ class Relationships3DSSG(IntEnum):
 
     @staticmethod
     def key_to_value(key: str) -> "Relationships3DSSG":
-        @cache
         def mapping():
             return {str(x).split(".")[-1]: x for x in Relationships3DSSG}
         return mapping()[key]
 
 
     @staticmethod
-    def binary_encode(rels: Sequence[str]) -> list[bool]:
+    def binary_encode(rels: Sequence) -> List[bool]:
         ret = [False] * len(Relationships3DSSG)
         rel_idx = [Relationships3DSSG.key_to_value(r) for r in rels]
         for r in rel_idx:
