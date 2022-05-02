@@ -132,12 +132,13 @@ def dash_app(dataset, scan_id_to_idx):
     all_scans = list(scan_id_to_idx.keys())
     from dash import Dash, dcc, html, Input, Output
     import dash_bootstrap_components as dbc
-    app = Dash("SceneChangeDataset visualization")
+    app = Dash(
+        name="SceneChangeDataset visualization",
+        external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+    )
     app.layout = html.Div([
-        html.H2("visualization of SceneChangeDataset"),
-        html.H5("Shao Zhou"),
-        dbc.Row([
-            dbc.Col([
+    html.Div([
+        html.Div([
                 html.P("Edges opacity"),
                 dcc.Slider(
                     id='edges_opacity',
@@ -152,11 +153,15 @@ def dash_app(dataset, scan_id_to_idx):
                 ),
                 html.P("scan_id:"),
                 dcc.Dropdown(options=all_scans, value=all_scans[10], id='scan_id'),
-            ], style={"width": "400px", "margin-left": 0},),
-            dbc.Col([
-                dcc.Graph(id='graph_vis')
-            ]),
-        ]),
+            ], style={"width": "400px", "margin-left": 0}, className='six columns'),
+
+        html.Div([
+            dcc.Graph(
+                id='graph_vis',
+                style={'width': '90vh', 'height': '90vh'},
+            ),
+        ], className="six columns"),
+    ], className="row")
     ])
 
     @app.callback(
