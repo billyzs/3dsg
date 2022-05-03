@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class DistanceBasedPartialConnectivity:
     """
     given a (normalized to 0 and 1) distance threshold, remove edges that (do not have any relations
-    and have relative distance smaller than this threshold
+    and have relative distance smaller than this threshold)
     this should be done before any attribute selection
     """
     distance_threshold: float
@@ -32,7 +32,7 @@ class DistanceBasedPartialConnectivity:
         edge_rels = graph.edge_attr[:, :-3]
         relative_xyz = graph.edge_attr[:, -3:]
         keep_mask = edge_rels.any(dim=1)
-        keep_mask |= torch.linalg.norm(relative_xyz, ord=2, dim=1) < self.distance_threshold
+        keep_mask |= (torch.linalg.norm(relative_xyz, ord=2, dim=1) ** 2) < self.distance_threshold
 
         graph.edge_index= graph.edge_index[:, keep_mask]
         graph.edge_attr = graph.edge_attr[keep_mask, :]
