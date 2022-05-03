@@ -75,7 +75,7 @@ def training_main(
         optimizer_cls,
         loss_cls,
         loss_params: dict,
-        seed: Optional[int] = None,
+        seed: int,
     ):
 
     if seed is not None:
@@ -84,7 +84,7 @@ def training_main(
 
     log_dir=f'{log_dir}/{experiment_name}'
     writer = SummaryWriter(log_dir=log_dir)  # creates dir?
-    writer.add_text(f"gin_config/{experiment_name}", gin.operative_config_str())
+    writer.add_text(f"gin_config", gin.config_str())
     writer.flush()
     save_config_files(log_dir, config_files)
     log_file = logging.FileHandler(f"{log_dir}/stdout.log")
@@ -110,13 +110,12 @@ def training_main(
         logger.warning(f"{epoch=}")
         trainable.train()
         for batch_num, batch in enumerate(loader):
-            logger.info(f"{epoch=} {batch_num=}")
+            logger.debug(f"{epoch=} {batch_num=}")
             logger.debug(f"graph {batch.input_graph}")
             optimizer.zero_grad()
             out = trainable(batch.x, batch.edge_index)
             loss = criterion(out, batch.y)
             writer.add_scalar("Loss/train", loss, epoch)
-            writer.flush()
             loss.backward()
             optimizer.step()
         torch.save(trainable, f"{log_dir}/model_epoch{epoch}.pt")
@@ -126,11 +125,16 @@ def training_main(
 
     # eval
     eval_loss_fn = torch.nn.BCEWithLogitsLoss()
+    eval_losses = []
     for vg in val_set:
         logger.info(f"evaluating graph {vg.input_graph}")
         out = trainable(vg.x, vg.edge_index)
         eval_loss = eval_loss_fn(out, vg.y)
+        eval_losses.append(eval_loss)
         writer.add_scalar(f"Loss/eval/{vg.input_graph}", eval_loss)
+        writer.flush()
+    mean_eval_losses = torch.mean(torch.tensor(eval_losses)) / (num_outputs * len(val_set))
+    writer.add_scalar(f"Loss/eval/mean", mean_eval_losses)
 
     writer.close()
     return trainable
@@ -143,3 +147,4 @@ if __name__ == "__main__":
     logger.debug(f"using {gin_config_files=}")
     gin.parse_config_files_and_bindings(gin_config_files, "")
     training_main(config_files=gin_config_files)
+
