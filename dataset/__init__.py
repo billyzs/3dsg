@@ -1,6 +1,6 @@
 from .Attributes3DSSG import Attributes3DSSG
 from .Relationships3DSSG import Relationships3DSSG
-from .Taxonomy3DSSG import Objects3DSSG
+from .Taxonomy3DSSG import Objects3DSSG, ObjectClassification, object_classifications
 from .SceneGraphChangeDataset import SceneGraphChangeDataset
 from .AllowList import TransformPipeline, AttributesAllowList, RelationshipsAllowList
 from .DistanceBasedPartialConnectivity import DistanceBasedPartialConnectivity
@@ -16,4 +16,6 @@ __all__ = [
     "RelationshipsAllowList",
     "DistanceBasedPartialConnectivity",
     "AddClassification",
+    "ObjectClassification",
+    "object_classifications",
 ]
