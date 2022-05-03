@@ -1,0 +1,10 @@
+DataLoader.batch_size = 16
+DataLoader.shuffle = True # should change when tuning hyperparams
+training_main.num_epochs = 10
+# training_main.trainable_cls = @GCN
+training_main.optimizer_cls = @torch.optim.Adam
+torch.optim.Adam.lr = 1e-3
+torch.optim.Adam.weight_decay = 5e-4
+training_main.loss_cls = @torch.nn.BCEWithLogitsLoss
+training_main.loss_params = {"reduction": "sum"}
+training_main.seed = 0xBEEFBABE
