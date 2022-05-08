@@ -1,7 +1,10 @@
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,python,kdevelop4,windows,vim,virtualenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,python,kdevelop4,windows,vim,virtualenv
+data/
+graphs/
 dataset_root.gin
+*.pickle
 
 3DSSG/
 *.zip
