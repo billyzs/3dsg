@@ -33,6 +33,7 @@ def mesh_to_figure(mesh_data: meshio.Mesh):
         i=I,j=J,k=K,
         vertexcolor=rgb.T,
         opacity=mesh_opacity,
+        name="mesh",
     )
     return pl_mesh
 
@@ -69,8 +70,10 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
         fr, to = int(fr), int(to)
         edge_xyz[:, idx*2] = graph.pos[fr, :].flatten()
         edge_xyz[:, idx*2+1] = graph.pos[to, :].flatten()
-        edge_rel = graph.edge_attr[idx, :]
-        text = f"{fr}->{to}{nl}]"
+        edge_rel = graph.edge_attr[idx, :-3]  # assume last 3 are relative xyz
+        fr_obj = str(Objects3DSSG(int(graph.classifications[fr])))
+        to_obj = str(Objects3DSSG(int(graph.classifications[to])))
+        text = f"{fr}[{fr_obj}]->{to}[{to_obj}]{nl}"
         if len(edge_rel) > total_rels:
             edge_rel, relative_xyz = edge_rel[:total_rels], edge_rel[total_rels:]
             text = text + nl.join((f"{axis[idx]}: {relative_xyz[idx]}" for idx in range(3)))
@@ -78,11 +81,25 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
         text = nl.join((text, edge_attr_txt))
         edge_hovertext.append(text)
     ex, ey, ez = edge_xyz
+    edge_dist = np.linalg.norm(edge_xyz, axis=0, ord=2).flatten()
+    edge_hovertext= [t + f"{nl}{edge_dist[idx]:.3f} m" for idx, t in enumerate(edge_hovertext)]
+    edge_colors = edge_dist - (edge_dist.max() - 0.01)  # shorter edges colored strongly
     return gobj.Scatter3d(
         x=ex,y=ey,z=ez,
         mode='lines',
         opacity=edge_opacity,
         text=edge_hovertext,
+        name="edges",
+        line=dict(
+            width=3,
+            #color=edge_colors,
+            color=edge_dist,
+            reversescale=True,
+            colorscale="Hot",
+            colorbar=dict(
+                title="edge distance (m)",
+                len=0.8),
+            showscale=True),
     )
 
 
@@ -97,8 +114,9 @@ def plot_nodes(graph: Data) -> gobj.Scatter3d:
         x=x,y=y,z=z,
         text=nodes_hovertext,
         mode='markers',
+        name="nodes",
         marker=dict(
-            showscale=True,
+            # showscale=True,
             color='#000',
         ),
     )
@@ -117,7 +135,7 @@ def visualize_one_graph(root: str, graph: Data):
     fig = gobj.Figure(
         data=_plots,
     )
-    fig.update_scenes({"aspectmode":"data"})
+    fig.update_scenes({"aspectmode":"data"})  # xyz on same scale
     return fig
 
 
@@ -185,8 +203,9 @@ if __name__ == "__main__":
     import sys
     import gin
     config_files = sys.argv[1:]
-    gin.parse_config_files_and_bindings(config_files, "")
+    gin.parse_config_files_and_bindings(config_files, "", skip_unknown=True)
     dataset = load_dataset()
+    # plot_edges(dataset[0])
     scan_id_to_idx = {d.input_graph: idx for idx, d in enumerate(dataset)}
     app = dash_app(dataset, scan_id_to_idx)
     app.run_server(debug=True)
