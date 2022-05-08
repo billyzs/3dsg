@@ -9,6 +9,7 @@ import plotly.graph_objects as gobj
 from dataset import *
 from torch_geometric.data import Data
 from collections.abc import Sequence
+import torch
 
 ply_file = "labels.instances.annotated.v2.ply"
 nl =  '<br>'
@@ -59,6 +60,23 @@ def plot_mesh(root: str, graph: Data) -> gobj.Scatter3d:
         mesh_trace = mesh_to_figure(mesh_data)
     return mesh_trace
 
+def load_centroids(root: str, graph: Data) -> Data:
+    with open(os.path.join(root, graph.input_graph, "semseg.v2.json")) as segf:
+        seg = json.load(segf)
+    objects = seg['segGroups']
+    centroids = torch.zeros((graph.x.shape[0],3))
+    # id_to_global_id = {int(i['id']): int(i["global_id"]) for i in nodes_in_this_scan}
+    id_to_centroid = dict()
+    for obj in objects:
+        obj_id = int(obj["objectId"])
+        obj_centroid = torch.tensor(obj["obb"]["centroid"]).flatten()
+        id_to_centroid[obj_id] = obj_centroid
+    ids_in_scan = sorted(list(id_to_centroid.keys()))
+    for idx, obj_id in enumerate(ids_in_scan):
+        centroids[idx, :] = id_to_centroid[obj_id]
+    graph.pos = centroids
+    return graph
+
 
 def plot_edges(graph: Data) -> gobj.Scatter3d:
     total_rels = len(Relationships3DSSG)
@@ -91,10 +109,10 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
         text=edge_hovertext,
         name="edges",
         line=dict(
-            width=3,
+            width=10,
             #color=edge_colors,
             color=edge_dist,
-            reversescale=True,
+            reversescale=False,
             colorscale="Hot",
             colorbar=dict(
                 title="edge distance (m)",
@@ -126,6 +144,7 @@ def plot_nodes(graph: Data) -> gobj.Scatter3d:
 def visualize_one_graph(root: str, graph: Data):
     if not graph:
         return None
+    load_centroids(root, graph)
     pl_nodes = plot_nodes(graph)
     pl_edges = plot_edges(graph)
     pl_mesh = plot_mesh(root, graph)
@@ -205,7 +224,8 @@ if __name__ == "__main__":
     config_files = sys.argv[1:]
     gin.parse_config_files_and_bindings(config_files, "", skip_unknown=True)
     dataset = load_dataset()
-    # plot_edges(dataset[0])
+    # plot_nodes(dataset[0])
+    load_centroids(dataset.root, dataset[0])
     scan_id_to_idx = {d.input_graph: idx for idx, d in enumerate(dataset)}
     app = dash_app(dataset, scan_id_to_idx)
     app.run_server(debug=True)
