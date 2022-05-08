@@ -40,9 +40,8 @@ class BinaryEdgeEmbedding:
             if rel is not None:
                 _edge_embeds_tensor[idx, rel] = 1
         if self.loc:
-            # normalize using the largest distance along a axis
-            # goal is to make xyz <= 1
-            max_dist = torch.max(relative_loc)
-            relative_loc = relative_loc * (1/max_dist)
+            # leave normalization as a transform
+            # max_dist = torch.max(relative_loc)
+            # relative_loc = relative_loc * (1/max_dist)
             _edge_embeds_tensor = torch.hstack((_edge_embeds_tensor, relative_loc))
         return _edge_embeds_tensor, _edge_idx_tensor
