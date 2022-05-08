@@ -19,6 +19,11 @@ mesh_opacity = 0.5
 edge_opacity = 0.3
 root = ""
 curr_graph = None
+graph_stats: str = ""
+
+def summarize_graph(graph):
+    s = str(graph)
+    return s
 
 def mesh_to_figure(mesh_data: meshio.Mesh):
     vertices = mesh_data.points.T # n by 3
@@ -141,15 +146,15 @@ def plot_nodes(graph: Data) -> gobj.Scatter3d:
     return nodes_trace
 
 
-def visualize_one_graph(root: str, graph: Data):
+def visualize_one_graph(root: str, graph: Data, _plot_mesh=True):
     if not graph:
         return None
     load_centroids(root, graph)
     pl_nodes = plot_nodes(graph)
     pl_edges = plot_edges(graph)
-    pl_mesh = plot_mesh(root, graph)
+    pl_mesh = plot_mesh(root, graph) if _plot_mesh else None
     _plots = [pl_nodes, pl_edges]
-    if pl_mesh:
+    if pl_mesh is not None:
         _plots.append(pl_mesh)
     fig = gobj.Figure(
         data=_plots,
@@ -169,27 +174,41 @@ def dash_app(dataset, scan_id_to_idx):
     all_scans = list(scan_id_to_idx.keys())
     from dash import Dash, dcc, html, Input, Output
     import dash_bootstrap_components as dbc
+    global graph_stats
     app = Dash(
         name="SceneChangeDataset visualization",
         external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
     )
-    app.layout = html.Div([
-    html.Div([
+    def _serve_layout():
+        ret = html.Div([
         html.Div([
+            html.Div([
                 html.P("Edges opacity"),
                 dcc.Slider(
                     id='edges_opacity',
                     min=0.0,
                     max=1.0,
+                    value=1.0,
                 ),
                 html.P("Mesh opacity"),
                 dcc.Slider(
                     id='mesh_opacity',
                     min=0.0,
                     max=1.0,
+                    value=1.0,
                 ),
                 html.P("scan_id:"),
-                dcc.Dropdown(options=all_scans, value=all_scans[10], id='scan_id'),
+                dcc.Dropdown(
+                    options=all_scans,
+                    value="787ed580-9d98-2c97-8167-6d3b445da2c0",
+                    id='scan_id'
+                ),
+                html.P("graph stats:"),
+                dcc.Textarea(
+                    value=graph_stats,
+                    readOnly=True,
+                    id="graph_stats",
+                )
             ], style={"width": "400px", "margin-left": 0}, className='six columns'),
 
         html.Div([
@@ -198,8 +217,11 @@ def dash_app(dataset, scan_id_to_idx):
                 style={'width': '90vh', 'height': '90vh'},
             ),
         ], className="six columns"),
-    ], className="row")
-    ])
+        ], className="row")
+        ])
+        return ret
+
+    app.layout = _serve_layout
 
     @app.callback(
         Output('graph_vis', 'figure'),
@@ -208,11 +230,14 @@ def dash_app(dataset, scan_id_to_idx):
         Input('scan_id', 'value'),
     )
     def update_mesh_opacity(m, e, g):
-        global mesh_opacity, edges_opacity, curr_graph
+        global mesh_opacity, edges_opacity, curr_graph, graph_stats
         mesh_opacity = m
         edges_opacity = e
         curr_graph = dataset[scan_id_to_idx[g]]
-        return visualize_one_graph(root, curr_graph)
+        graph_stats = summarize_graph(curr_graph)
+        _plot_mesh = mesh_opacity > 0.05
+        print(curr_graph)
+        return visualize_one_graph(root, curr_graph, _plot_mesh)
 
     return app
 
