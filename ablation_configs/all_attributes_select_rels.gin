@@ -1,0 +1,10 @@
+RelationshipsAllowList.allowed_items = ['supported_by', 'inside', 'same_symmetry_as', 'same_as', 'attached_to', 'standing_on', 'lying_on', 'hanging_on', 'connected_to', 'leaning_against', 'part_of', 'belonging_to', 'build_in', 'standing_in', 'cover', 'lying_in', 'hanging_in']
+RelationshipsAllowList.pre_offset = 0
+RelationshipsAllowList.post_offset = 3
+DistanceBasedPartialConnectivity.normalize = True
+DistanceBasedPartialConnectivity.enabled = False
+DistanceBasedPartialConnectivity.abs_distance_threshold = 1e9 # disable
+
+TransformPipeline.steps = [@RelationshipsAllowList, @DistanceBasedPartialConnectivity]
+SceneGraphChangeDataset.transform = @TransformPipeline()
+train_neuralnet.experiment_name = "all_attributes_select_rels"

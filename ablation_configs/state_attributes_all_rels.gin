@@ -1,0 +1,10 @@
+AttributesAllowList.allowed_items = ['state_new', 'state_old', 'state_dirty', 'state_clean', 'state_open', 'state_empty', 'state_full', 'state_hanging', 'state_half_full_or_empty', 'state_messy', 'state_tidy', 'state_on', 'state_off', 'state_folded_together', 'state_seat_up', 'state_seat_down', 'state_up', 'state_down', 'state_half_up_or_down', 'state_bare', 'state_written_on', 'other_mobile', 'other_rigid', 'other_nonrigid']
+AttributesAllowList.pre_offset = 0
+AttributesAllowList.post_offset = 0  # assume classification added after attr selection
+DistanceBasedPartialConnectivity.normalize = True
+DistanceBasedPartialConnectivity.enabled = False
+DistanceBasedPartialConnectivity.abs_distance_threshold = 1e9 # disable
+
+TransformPipeline.steps = [@AttributesAllowList, @DistanceBasedPartialConnectivity]
+SceneGraphChangeDataset.transform = @TransformPipeline()
+train_neuralnet.experiment_name = "state_attributes_all_rels"
