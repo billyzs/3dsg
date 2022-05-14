@@ -21,14 +21,21 @@ class DistanceBasedPartialConnectivity:
     this should be done before any attribute selection
     """
     abs_distance_threshold: float
-    enabled: bool = True
+    enabled: bool = False
     normalize: bool = True
+    remove_relative_distance: bool = False
     def __call__(self, graph: Data) -> Data:
         if self.enabled:
             graph = self.filter(graph)
         if self.normalize:
             graph = self._normalize(graph)
+        if self.remove_relative_distance:
+            graph = self._remove_relative_distance(graph)
         return graph
+
+    def _remove_relative_distance(self, graph: Data) -> Data:
+       graph.edge_attr = graph.edge_attr[:, :-3]
+       return graph
 
     def _normalize(self, graph: Data) -> Data:
         # should be done after filtering

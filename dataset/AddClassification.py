@@ -33,7 +33,7 @@ class AddClassification:
 
 
     def __call__(self, graph: Data) -> Data:
-        embedding = self.one_hot_encode(graph)
+        embedding = self.one_hot_encode(graph.classifications)
         graph.x = torch.hstack((graph.x, embedding))
         return graph
 
