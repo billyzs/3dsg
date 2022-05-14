@@ -93,10 +93,13 @@ class SceneGraphChangeDataset(InMemoryDataset):
                         if nodes_1 is not None and nodes_2 is not None:
                             transf_node_1 = transform_locations(nodes_1, T_1I)
                             transf_node_2 = transform_locations(nodes_2, T_2I)
-                            node_embeddings, node_idxs, node_pos, node_classifications = self.node_embedder.generate_node_embeddings(transf_node_1)
-                            edge_embeddings, edge_idxs = self.edge_embedder.generate_edge_embeddings(nodes_1, edges_1, node_idxs)
+                            node_embeddings, node_idxs, node_pos, node_classifications = self.node_embedder.generate_node_embeddings(
+                                transf_node_1)
+                            edge_embeddings, edge_idxs = self.edge_embedder.generate_edge_embeddings(nodes_1, edges_1,
+                                                                                                     node_idxs)
 
-                            node_labels = self.variability_embedder.generate_variability_embedding(transf_node_1, transf_node_2, node_idxs)
+                            node_labels, state_mask = self.variability_embedder.generate_variability_embedding(
+                                transf_node_1, transf_node_2, node_idxs)
 
                             sample = Data(
                                 x=node_embeddings,
@@ -108,7 +111,8 @@ class SceneGraphChangeDataset(InMemoryDataset):
                                 input_graph=scan_id_set[i],
                                 output_graph=scan_id_set[j],
                                 input_tf=T_1I,
-                                output_tf=T_2I
+                                output_tf=T_2I,
+                                state_mask=state_mask
                             )
                             samples.append(sample)
 

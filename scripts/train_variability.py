@@ -13,17 +13,18 @@ from tqdm import tqdm
 
 def calculate_training_loss(data, nnet, l_fn, nnet_type):
     x_i = data.x
-    y_i = data.y[:, :2]
-    m_i = data.y[:, 2]
+    node_mask = data.y[:, 2]
+    state_mask = data.state_mask
     if nnet_type == "gnn":
         e_idx_i = data.edge_index.type(torch.LongTensor)
         e_att_i = data.edge_attr
         pred_i = nnet(x_i, e_idx_i, e_att_i)
     else:
         pred_i = nnet(x_i)
-    loss_1 = l_fn(pred_i[:, :2], y_i)
-    loss_2 = l_fn(pred_i[:, 2], m_i)
-    loss = (torch.sum(torch.multiply(torch.sum(loss_1, 1), m_i))+ torch.sum(loss_2))/(2*torch.sum(m_i) + torch.numel(loss_2))
+    loss_state = l_fn(pred_i[:, 0], data.y[:, 0])
+    loss_pos = l_fn(pred_i[:, 1], data.y[:, 1])
+    loss_mask = l_fn(pred_i[:, 2], data.y[:, 2])
+    loss = (torch.sum(torch.multiply(loss_state, state_mask)) + torch.sum(torch.multiply(loss_pos, node_mask)) + torch.sum(loss_mask)) / (torch.sum(node_mask) + torch.mean(loss_mask) + torch.numel(node_mask))
     return loss, pred_i
 
 
@@ -79,13 +80,17 @@ if __name__ == "__main__":
     tv_split = [val for val in range(len(dataset)) if val not in test_split]
     tv_set = dataset[tv_split]
 
+    samples = torch.tensor([torch.sum(tv_set.data.state_mask), torch.sum(tv_set.data.y[:, 2]), torch.numel(tv_set.data.y[:, 2])])
+    positives = torch.sum(tv_set.data.y, dim=0)
+    cur_balance = torch.divide(positives, samples)
+
     hyperparams = {
         "model_name": "Simple GNN v1",
         "model_type": "gnn",
         "hidden_layers": [16],
-        "lr": 0.001,
+        "lr": 0.0001,
         "weight_decay": 5e-4,
-        "num_epochs": 10,
+        "num_epochs": 20,
         "bs": 16,
         "loss": torch.nn.BCEWithLogitsLoss(reduction="none")
     }
