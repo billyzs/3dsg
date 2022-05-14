@@ -21,18 +21,15 @@ class AddClassification:
         "rio": len(Objects3DSSG),
     })
 
-    def one_hot_encode(self, graph: Data):
-        _cl = graph.classifications  # 1 based
+    def one_hot_encode(self, rio_cls):
+        _cl = rio_cls.type(torch.int64)  # 1 based
         _cl = _cl - 1
         if self.convention != "rio":
             _cl = torch.tensor([getattr(self.rio_to_all[int(c)],self.convention) for c in _cl], dtype=torch.long)
             if self.convention == "nyu40":
                 _cl[_cl==40] = 0;  # remap to make proper one-hot
-        try:
-            embedding = torch.nn.functional.one_hot(_cl, num_classes=self.num_classes[self.convention])
-            return embedding
-        except:
-            breakpoint()
+        embedding = torch.nn.functional.one_hot(_cl.flatten(), num_classes=self.num_classes[self.convention]).type(torch.float32)
+        return embedding
 
 
     def __call__(self, graph: Data) -> Data:

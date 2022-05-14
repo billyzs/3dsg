@@ -5,6 +5,7 @@ from .SceneGraphChangeDataset import SceneGraphChangeDataset
 from .AllowList import TransformPipeline, AttributesAllowList, RelationshipsAllowList
 from .DistanceBasedPartialConnectivity import DistanceBasedPartialConnectivity
 from .AddClassification import AddClassification
+from .PCA import PCATransform
 
 __all__ = [
     "Attributes3DSSG",
@@ -18,4 +19,5 @@ __all__ = [
     "AddClassification",
     "ObjectClassification",
     "object_classifications",
+    "PCATransform",
 ]

@@ -6,9 +6,13 @@ from .AttributeEmbedding import BinaryNodeEmbedding
 from .RelationshipEmbedding import BinaryEdgeEmbedding
 from .VariabilityEmbedding import BinaryVariabilityEmbedding
 from .DatasetCfg import DatasetCfg
+from .AddClassification import AddClassification
 from .utils.extract_data import build_scene_graph, format_scan_dict, transform_locations
 from typing import List, Dict
 import gin
+from sklearn.decomposition import PCA
+import numpy as np
+import multiprocessing as mp
 
 
 def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
@@ -23,7 +27,6 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
 
     return scan_id_set, scan_tf_set
 
-
 @gin.configurable
 class SceneGraphChangeDataset(InMemoryDataset):
     def __init__(self, root=None, cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
@@ -35,7 +38,8 @@ class SceneGraphChangeDataset(InMemoryDataset):
         self.root = root
         self.raw_files: str = os.path.join(root, "raw", "raw_files.txt")
         super().__init__(self.root, transform, pre_transform, pre_filter)
-        self.data, self.slices = torch.load(self.processed_paths[0])
+        if os.path.isfile(self.processed_paths[0]):
+            self.data, self.slices = torch.load(self.processed_paths[0])
 
     def _load_raw_files(self):
         # Load raw data files as per standard dataset folder organization
@@ -79,7 +83,8 @@ class SceneGraphChangeDataset(InMemoryDataset):
             from tqdm import tqdm
         except ImportError:
             tqdm = lambda x: (_ for _ in x)
-        for scene in tqdm(self.scans):
+        pca_num_dims = 120
+        def _process_one_scene(scene):
             scan_id_set, scan_tf_set = get_scene_list(scene)
             for i in range(len(scan_id_set)):
                 for j in range(len(scan_id_set)):
@@ -103,11 +108,12 @@ class SceneGraphChangeDataset(InMemoryDataset):
 
                             sample = Data(
                                 x=node_embeddings,
+                                pca=torch.zeros(node_embeddings.shape[0], pca_num_dims),
                                 edge_index=edge_idxs,
                                 edge_attr=edge_embeddings,
                                 y=node_labels,
                                 pos=node_pos,
-                                classifications=node_classifications,
+                                classifications=node_classifications.type(torch.int64),
                                 input_graph=scan_id_set[i],
                                 output_graph=scan_id_set[j],
                                 input_tf=T_1I,
@@ -115,7 +121,15 @@ class SceneGraphChangeDataset(InMemoryDataset):
                                 state_mask=state_mask
                             )
                             samples.append(sample)
-
+        [_process_one_scene(scene) for scene in tqdm(self.scans)]
         data, slices = self.collate(samples)
+        if True:
+            bin_cls = AddClassification(convention="rio").one_hot_encode(data.classifications)
+            np_input_mat = np.hstack([data.x.numpy(), bin_cls.numpy()])
+            pca = PCA(n_components=pca_num_dims)
+            pca.fit(np_input_mat)
+            pca_result = pca.transform(np_input_mat)
+            data.pca = torch.from_numpy(pca_result).type(torch.float)
+
         torch.save((data, slices), self.processed_paths[0])
 
