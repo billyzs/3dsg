@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import torch
+import logging
+import io
 
+logger = logging.getLogger("train/eval")
+print = logger.warning
 
 class TrainingLogger:
     def __init__(self, title, train_n, print_interval):
@@ -71,21 +75,31 @@ class TrainingLogger:
         self.val_pos_conf = torch.zeros((2, 2))
         self.val_mask_conf = torch.zeros((2, 2))
 
-    def plot_training_losses(self):
+    def plot_training_losses(self, show=False):
         plt.plot(self.train_losses)
         plt.ylabel("Training Losses")
         plt.xlabel("Epoch")
         plt.title(self.model_title)
-        plt.show()
+        if show:
+            plt.show()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='jpeg')
+        buf.seek(0)
+        return buf
 
-    def plot_valid_losses(self):
+    def plot_valid_losses(self, show=False):
         plt.plot(self.val_losses)
         plt.ylabel("Validation Losses")
         plt.xlabel("Epoch")
         plt.title(self.model_title)
-        plt.show()
+        if show:
+            plt.show()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='jpeg')
+        buf.seek(0)
+        return buf
 
-    def plot_accuracies(self):
+    def plot_accuracies(self, show=False):
         plt.plot(self.val_state_accs, label="State Variability")
         plt.plot(self.val_state_accs, label="Position Variability")
         plt.plot(self.val_state_accs, label="Mask")
@@ -93,7 +107,12 @@ class TrainingLogger:
         plt.xlabel("Epoch")
         plt.title(self.model_title)
         plt.legend()
-        plt.show()
+        if show:
+            plt.show()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='jpeg')
+        buf.seek(0)
+        return buf
 
     def save_model(self):
         torch.save(self.latest_model, self.save_path)
