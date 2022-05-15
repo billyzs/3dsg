@@ -19,7 +19,7 @@ mesh_opacity = 0.5
 edge_opacity = 0.3
 root = ""
 curr_graph = None
-graph_stats: str = ""
+graph_stats_str: str = ""
 
 def summarize_graph(graph):
     s = str(graph)
@@ -174,7 +174,7 @@ def dash_app(dataset, scan_id_to_idx):
     all_scans = list(scan_id_to_idx.keys())
     from dash import Dash, dcc, html, Input, Output
     import dash_bootstrap_components as dbc
-    global graph_stats
+    global graph_stats_str
     app = Dash(
         name="SceneChangeDataset visualization",
         external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
@@ -205,7 +205,6 @@ def dash_app(dataset, scan_id_to_idx):
                 ),
                 html.P("graph stats:"),
                 dcc.Textarea(
-                    value=graph_stats,
                     readOnly=True,
                     id="graph_stats",
                 )
@@ -225,19 +224,20 @@ def dash_app(dataset, scan_id_to_idx):
 
     @app.callback(
         Output('graph_vis', 'figure'),
+        Output('graph_stats', 'value'),
         Input('mesh_opacity', 'value'),
         Input('edges_opacity', 'value'),
         Input('scan_id', 'value'),
     )
     def update_mesh_opacity(m, e, g):
-        global mesh_opacity, edges_opacity, curr_graph, graph_stats
+        global mesh_opacity, edges_opacity, curr_graph, graph_stats_str
         mesh_opacity = m
         edges_opacity = e
         curr_graph = dataset[scan_id_to_idx[g]]
-        graph_stats = summarize_graph(curr_graph)
+        graph_stats_str = summarize_graph(curr_graph)
         _plot_mesh = mesh_opacity > 0.05
         print(curr_graph)
-        return visualize_one_graph(root, curr_graph, _plot_mesh)
+        return visualize_one_graph(root, curr_graph, _plot_mesh), graph_stats_str
 
     return app
 
