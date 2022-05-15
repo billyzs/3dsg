@@ -125,7 +125,7 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
         text=edge_hovertext,
         name="edges",
         line=dict(
-            width=10,
+            width=4,
             #color=edge_colors,
             color=edge_dist,
             reversescale=False,
@@ -233,6 +233,7 @@ def dash_app(dataset, scan_id_to_idx):
                 dcc.Textarea(
                     readOnly=True,
                     id="graph_stats",
+                    style = {"width":"350px", "height":"350px"},
                 )
             ], style={"width": "400px", "margin-left": 0}, className='six columns'),
 
