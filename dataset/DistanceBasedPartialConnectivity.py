@@ -11,9 +11,8 @@ import gin
 logger = logging.getLogger(__name__)
 
 
-@gin.configurable
-@dataclass(frozen=True)
-class DistanceBasedPartialConnectivity:
+@dataclass(frozen=False)
+class _DistanceBasedPartialConnectivity:
     """
     given an absolute distance threshold, remove edges that both
     (do not have any relations
@@ -57,3 +56,7 @@ class DistanceBasedPartialConnectivity:
         graph.edge_index= graph.edge_index[:, keep_mask]
         graph.edge_attr = graph.edge_attr[keep_mask, :]
         return graph
+
+@gin.configurable
+class DistanceBasedPartialConnectivity(_DistanceBasedPartialConnectivity):
+    pass
