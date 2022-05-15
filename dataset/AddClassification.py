@@ -4,6 +4,7 @@ import logging
 import torch
 from torch_geometric.data import Data
 import gin
+from typing import List, Dict
 
 
 logger = logging.getLogger(__name__)
@@ -13,8 +14,8 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class AddClassification:
     convention: str
-    rio_to_all: dict[int, ObjectClassification] = field(default_factory=lambda:{c.rio : c for c in object_classifications})
-    num_classes: dict[str, int] = field(default_factory = lambda: {
+    rio_to_all: Dict[int, ObjectClassification] = field(default_factory=lambda:{c.rio : c for c in object_classifications})
+    num_classes: Dict[str, int] = field(default_factory = lambda: {
         "eigen13": 14,  # 13 is window
         "rio27": 28,    # 27 is blanket
         "nyu40": 40,

@@ -55,9 +55,13 @@ def train_neuralnet(dset, neuralnet, hyperparams, visualize=False):
         for data in tqdm(val_loader):
             loss, pred_i = calculate_training_loss(data, neuralnet, l_fn, nnet_type)
             val_loss = loss.item()
-            state_conf = calculate_conf_mat(pred_i[:, 0], data.y[:, 0])
-            pos_conf = calculate_conf_mat(pred_i[:, 1], data.y[:, 1])
-            mask_conf = calculate_conf_mat(pred_i[:, 2], data.y[:, 1])
+
+            valid_samples = pred_i[torch.where(data.y[:, 2] == 1)]
+            valid_sample_label = data.y[torch.where(data.y[:, 2] == 1)]
+            state_conf = calculate_conf_mat(valid_samples[:, 0], valid_sample_label[:, 0])
+            pos_conf = calculate_conf_mat(valid_samples[:, 1], valid_sample_label[:, 1])
+            mask_conf = calculate_conf_mat(pred_i[:, 2], data.y[:, 2])
+
             logger.log_validation_iter(val_loss, state_conf, pos_conf, mask_conf)
 
             if visualize:
