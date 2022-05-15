@@ -7,6 +7,7 @@ import numpy as np
 import meshio
 import plotly.graph_objects as gobj
 from dataset import *
+from dataset.DistanceBasedPartialConnectivity import _DistanceBasedPartialConnectivity
 from torch_geometric.data import Data
 from collections.abc import Sequence
 import torch
@@ -20,6 +21,16 @@ edge_opacity = 0.3
 root = ""
 curr_graph = None
 graph_stats_str: str = ""
+ref_scan_to_rescan: dict[str, list[str]] = dict()
+curr_refscan_id = "c92fb576-f771-2064-845a-a52a44a9539f"  # 11 rescans
+dist_filter = _DistanceBasedPartialConnectivity(enabled=True, normalize=False, abs_distance_threshold=1e9)
+
+connectivity_to_dist = {
+    1: 1.680349,
+    2: 2.625959,
+    3: 3.730257,
+    4: 1e9,
+}
 
 def summarize_graph(graph):
     s = str(graph)
@@ -174,12 +185,16 @@ def dash_app(dataset, scan_id_to_idx):
     all_scans = list(scan_id_to_idx.keys())
     from dash import Dash, dcc, html, Input, Output
     import dash_bootstrap_components as dbc
-    global graph_stats_str
+    global graph_stats_str, curr_refscan_id, ref_scan_to_rescan
+    all_ref_scans =list(ref_scan_to_rescan.keys())
+
     app = Dash(
         name="SceneChangeDataset visualization",
         external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
     )
     def _serve_layout():
+        global graph_stats_str, curr_refscan_id, ref_scan_to_rescan
+        all_rescans = ref_scan_to_rescan[curr_refscan_id]
         ret = html.Div([
         html.Div([
             html.Div([
@@ -197,11 +212,22 @@ def dash_app(dataset, scan_id_to_idx):
                     max=1.0,
                     value=1.0,
                 ),
-                html.P("scan_id:"),
+                html.P("Edges connectivity %"),
+                dcc.Slider(25, 100, 25,
+                    id='edges_connectivity',
+                    value=100,
+                ),
+                html.P("refscan_id:"),
                 dcc.Dropdown(
-                    options=all_scans,
-                    value="787ed580-9d98-2c97-8167-6d3b445da2c0",
-                    id='scan_id'
+                    options=all_ref_scans,
+                    value=curr_refscan_id,
+                    id='refscan_id'
+                ),
+                html.P("rescan_id:"),
+                dcc.Dropdown(
+                    options=all_rescans,
+                    value=all_rescans[0],
+                    id='rescan_id'
                 ),
                 html.P("graph stats:"),
                 dcc.Textarea(
@@ -227,13 +253,22 @@ def dash_app(dataset, scan_id_to_idx):
         Output('graph_stats', 'value'),
         Input('mesh_opacity', 'value'),
         Input('edges_opacity', 'value'),
-        Input('scan_id', 'value'),
+        Input('rescan_id', 'value'),
+        Input('edges_connectivity', 'value'),
     )
-    def update_mesh_opacity(m, e, g):
-        global mesh_opacity, edges_opacity, curr_graph, graph_stats_str
+    def update_mesh_opacity(m, e, g, ctv):
+        global mesh_opacity, edges_opacity, curr_graph, graph_stats_str, dist_filter
         mesh_opacity = m
         edges_opacity = e
-        curr_graph = dataset[scan_id_to_idx[g]]
+        ctv_lvl: int = min(int(ctv / 25), 4)
+        print(ctv_lvl)
+        thresh = connectivity_to_dist[ctv_lvl]
+        print(thresh)
+        dist_filter.abs_distance_threshold = thresh
+        print(f"using {dist_filter.abs_distance_threshold=} m")
+
+        curr_graph = dist_filter(dataset[scan_id_to_idx[g]])
+
         graph_stats_str = summarize_graph(curr_graph)
         _plot_mesh = mesh_opacity > 0.05
         print(curr_graph)
@@ -249,7 +284,13 @@ if __name__ == "__main__":
     config_files = sys.argv[1:]
     gin.parse_config_files_and_bindings(config_files, "", skip_unknown=True)
     dataset = load_dataset()
-    # plot_nodes(dataset[0])
+    dataset._load_raw_files()
+    for one_scan in dataset.scans:
+        refscan_id = one_scan["reference"]
+        rescans = [s["reference"] for s in one_scan["scans"]]
+        ref_scan_to_rescan[refscan_id] = rescans
+        print(f"{refscan_id=} has {len(rescans)} rescans")
+    print(len(dataset.scans))
     load_centroids(dataset.root, dataset[0])
     scan_id_to_idx = {d.input_graph: idx for idx, d in enumerate(dataset)}
     app = dash_app(dataset, scan_id_to_idx)
