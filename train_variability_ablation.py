@@ -9,6 +9,7 @@ from dataset.utils.logging import TrainingLogger
 from dataset.DatasetCfg import DatasetCfg
 from models.SimpleGCN import SimpleMPGNN
 from models.SimpleMLP import SimpleMLP
+from models.FocalLoss import FocalLoss
 from scripts.eval import calculate_conf_mat
 import numpy as np
 from tqdm import tqdm
@@ -56,11 +57,11 @@ def train_neuralnet(dset,
                     neuralnet,
                     base_log_dir: str,
                     experiment_name: str,
-                    l_fn,
                     epochs: int,
                     nnet_type: str,
                     bs: int,
                     seed: int,
+                    l_fn = FocalLoss(torch.ones(1,3), 0.5),
                     visualize=False):
 
     if seed is not None:
