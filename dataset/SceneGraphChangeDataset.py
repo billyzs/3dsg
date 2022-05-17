@@ -29,7 +29,7 @@ def get_scene_list(scene: Dict) -> (List[str], List[torch.Tensor]):
 
 @gin.configurable
 class SceneGraphChangeDataset(InMemoryDataset):
-    def __init__(self, root=None, cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
+    def __init__(self, pca_dim=0, root=None, cfg: DatasetCfg = None, transform=None, pre_transform=None, pre_filter=None):
         self.cfg: DatasetCfg = cfg
         if not root:
             root = self.cfg.root
@@ -40,6 +40,16 @@ class SceneGraphChangeDataset(InMemoryDataset):
         super().__init__(self.root, transform, pre_transform, pre_filter)
         if os.path.isfile(self.processed_paths[0]):
             self.data, self.slices = torch.load(self.processed_paths[0])
+            if pca_dim != 0:
+                # 0 means disable pca
+                bin_cls = AddClassification(convention="rio").one_hot_encode(self.data.classifications)
+                np_input_mat = np.hstack([self.data.x.numpy(), bin_cls.numpy()])
+                print(pca_dim)
+                pca = PCA(n_components=pca_dim)
+                pca.fit(np_input_mat)
+                pca_result = pca.transform(np_input_mat)
+                self.data.pca = torch.from_numpy(pca_result).type(torch.float)
+
 
     def _load_raw_files(self):
         # Load raw data files as per standard dataset folder organization
