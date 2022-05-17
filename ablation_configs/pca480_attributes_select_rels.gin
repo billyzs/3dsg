@@ -6,5 +6,6 @@ DistanceBasedPartialConnectivity.enabled = False
 DistanceBasedPartialConnectivity.abs_distance_threshold = 1e9 # disable
 
 TransformPipeline.steps = [@PCATransform, @RelationshipsAllowList, @DistanceBasedPartialConnectivity]
+SceneGraphChangeDataset.pca_dim = 480
 SceneGraphChangeDataset.transform = @TransformPipeline()
-train_neuralnet.experiment_name = "pca_attributes_select_rels"
+train_neuralnet.experiment_name = "pca480_attributes_select_rels"
