@@ -10,11 +10,12 @@ from dataset import *
 from dataset.DistanceBasedPartialConnectivity import _DistanceBasedPartialConnectivity
 from torch_geometric.data import Data
 from collections.abc import Sequence
+from models.SimpleGCN import SimpleMPGNN
 import torch
+import copy
 
 ply_file = "labels.instances.annotated.v2.ply"
 nl =  '<br>'
-
 
 mesh_opacity = 0.5
 edge_opacity = 0.3
@@ -24,7 +25,8 @@ graph_stats_str: str = ""
 ref_scan_to_rescan: dict[str, list[str]] = dict()
 curr_refscan_id = "c92fb576-f771-2064-845a-a52a44a9539f"  # 11 rescans
 dist_filter = _DistanceBasedPartialConnectivity(enabled=True, normalize=False, abs_distance_threshold=1e9)
-
+GCN = None
+transform = None
 connectivity_to_dist = {
     1: 1.680349,
     2: 2.625959,
@@ -136,14 +138,21 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
             showscale=True),
     )
 
-
-def plot_nodes(graph: Data) -> gobj.Scatter3d:
+@torch.inference_mode()
+def plot_nodes(_graph: Data) -> gobj.Scatter3d:
+    graph = copy.deepcopy(_graph)
+    inference_graph = transform(_graph)
+    GCN.eval()
+    pred = GCN.forward(inference_graph.x, inference_graph.edge_index, inference_graph.edge_attr)
+    pred = torch.sigmoid(pred)
+    print(pred.shape)
+    state_var, pos_var, existence_mask = pred.transpose(1, 0)
     x, y, z = graph.pos.transpose(1,0)
     nodes_hovertext = []
-    for cls, attr in zip(graph.classifications, graph.x):
+    for cls, attr, s, p, e in zip(graph.classifications, graph.x, state_var, pos_var, existence_mask):
+        inference_result = nl.join([f"state variability: {s:.3f}", f"position variability: {p:.3f}", f"existence mask: {e:.3f}"])
         nodes_hovertext.append(nl.join(
-            [str(Objects3DSSG(int(cls))), node_attr_to_str(attr)]))
-
+            [str(Objects3DSSG(int(cls))), inference_result, node_attr_to_str(attr)]))
     nodes_trace = gobj.Scatter3d(
         x=x,y=y,z=z,
         text=nodes_hovertext,
@@ -151,7 +160,10 @@ def plot_nodes(graph: Data) -> gobj.Scatter3d:
         name="nodes",
         marker=dict(
             # showscale=True,
-            color='#000',
+            colorscale="Hot",
+            color=state_var,
+            # opacity=edge_opacity * existence_mask,
+            size=10*(1+pos_var),
         ),
     )
     return nodes_trace
@@ -286,6 +298,12 @@ if __name__ == "__main__":
     gin.parse_config_files_and_bindings(config_files, "", skip_unknown=True)
     dataset = load_dataset()
     dataset._load_raw_files()
+    # 120
+    _GCN = torch.load("pca_model_final.pt")
+    GCN = SimpleMPGNN(dataset.num_node_features, dataset.num_classes, dataset.num_edge_features, [16])
+    GCN.load_state_dict(_GCN.state_dict())
+    transform = dataset.transform
+    dataset.transform = None;
     for one_scan in dataset.scans:
         refscan_id = one_scan["reference"]
         rescans = [s["reference"] for s in one_scan["scans"]]
