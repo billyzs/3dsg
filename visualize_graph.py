@@ -18,12 +18,13 @@ ply_file = "labels.instances.annotated.v2.ply"
 nl =  '<br>'
 
 mesh_opacity = 0.5
-edge_opacity = 0.3
+edges_opacity = 0.3
 root = ""
 curr_graph = None
 graph_stats_str: str = ""
 ref_scan_to_rescan: dict[str, list[str]] = dict()
 curr_refscan_id = "c92fb576-f771-2064-845a-a52a44a9539f"  # 11 rescans
+curr_rescans = []
 dist_filter = _DistanceBasedPartialConnectivity(enabled=True, normalize=False, abs_distance_threshold=1e9)
 GCN = None
 transform = None
@@ -123,7 +124,7 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
     return gobj.Scatter3d(
         x=ex,y=ey,z=ez,
         mode='lines',
-        opacity=edge_opacity,
+        opacity=edges_opacity,
         text=edge_hovertext,
         name="edges",
         line=dict(
@@ -132,10 +133,11 @@ def plot_edges(graph: Data) -> gobj.Scatter3d:
             color=edge_dist,
             reversescale=False,
             colorscale="Hot",
-            colorbar=dict(
-                title="edge distance (m)",
-                len=0.8),
-            showscale=True),
+            #colorbar=dict(
+            #    title="edge distance (m)",
+            #    len=0.8),
+            #showscale=True
+        ),
     )
 
 @torch.inference_mode()
@@ -174,9 +176,11 @@ def visualize_one_graph(root: str, graph: Data, _plot_mesh=True):
         return None
     load_centroids(root, graph)
     pl_nodes = plot_nodes(graph)
-    pl_edges = plot_edges(graph)
+    _plots = [pl_nodes]
+    if edges_opacity > 0.2:
+        pl_edges = plot_edges(graph)
+        _plots.append(pl_edges)
     pl_mesh = plot_mesh(root, graph) if _plot_mesh else None
-    _plots = [pl_nodes, pl_edges]
     if pl_mesh is not None:
         _plots.append(pl_mesh)
     fig = gobj.Figure(
@@ -197,16 +201,14 @@ def dash_app(dataset, scan_id_to_idx):
     all_scans = list(scan_id_to_idx.keys())
     from dash import Dash, dcc, html, Input, Output
     import dash_bootstrap_components as dbc
-    global graph_stats_str, curr_refscan_id, ref_scan_to_rescan
-    all_ref_scans =list(ref_scan_to_rescan.keys())
+    global graph_stats_str, curr_refscan_id, ref_scan_to_rescan, curr_rescans
 
     app = Dash(
         name="SceneChangeDataset visualization",
         external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
     )
     def _serve_layout():
-        global graph_stats_str, curr_refscan_id, ref_scan_to_rescan
-        all_rescans = ref_scan_to_rescan[curr_refscan_id]
+        global graph_stats_str, curr_refscan_id, ref_scan_to_rescan, curr_rescans
         ret = html.Div([
         html.Div([
             html.Div([
@@ -237,9 +239,9 @@ def dash_app(dataset, scan_id_to_idx):
                 ),
                 html.P("rescan_id:"),
                 dcc.Dropdown(
-                    options=all_rescans,
-                    value=all_rescans[0],
-                    id='rescan_id'
+                    options=curr_rescans,
+                    value=curr_rescans[0],
+                    id='rescan_id',
                 ),
                 html.P("graph stats:"),
                 dcc.Textarea(
@@ -264,13 +266,18 @@ def dash_app(dataset, scan_id_to_idx):
     @app.callback(
         Output('graph_vis', 'figure'),
         Output('graph_stats', 'value'),
+        Output('rescan_id', 'options'),
         Input('mesh_opacity', 'value'),
         Input('edges_opacity', 'value'),
         Input('rescan_id', 'value'),
+        Input('refscan_id', 'value'),
         Input('edges_connectivity', 'value'),
     )
-    def update_mesh_opacity(m, e, g, ctv):
+    def update_mesh_opacity(m, e, g, r, ctv):
         global mesh_opacity, edges_opacity, curr_graph, graph_stats_str, dist_filter
+        global graph_stats_str, curr_refscan_id, ref_scan_to_rescan, curr_rescans
+        curr_refscan_id = r
+        curr_rescans = ref_scan_to_rescan[r]
         mesh_opacity = m
         edges_opacity = e
         ctv_lvl: int = min(int(ctv / 25), 4)
@@ -285,7 +292,7 @@ def dash_app(dataset, scan_id_to_idx):
         graph_stats_str = summarize_graph(curr_graph)
         _plot_mesh = mesh_opacity > 0.05
         print(curr_graph)
-        return visualize_one_graph(root, curr_graph, _plot_mesh), graph_stats_str
+        return visualize_one_graph(root, curr_graph, _plot_mesh), graph_stats_str, curr_rescans
 
     return app
 
@@ -312,6 +319,8 @@ if __name__ == "__main__":
     print(len(dataset.scans))
     load_centroids(dataset.root, dataset[0])
     scan_id_to_idx = {d.input_graph: idx for idx, d in enumerate(dataset)}
+    all_ref_scans =list(ref_scan_to_rescan.keys())
+    curr_rescans = ref_scan_to_rescan[curr_refscan_id]
     app = dash_app(dataset, scan_id_to_idx)
     app.run_server(debug=True)
 
