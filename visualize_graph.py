@@ -150,7 +150,19 @@ def plot_nodes(_graph: Data) -> gobj.Scatter3d:
     state_var, pos_var, existence_mask = pred.transpose(1, 0)
     x, y, z = graph.pos.transpose(1,0)
     nodes_hovertext = []
-    color = torch.abs(graph.y[:, 0] - state_var)
+    # color = torch.abs(graph.y[:, 0] - state_var)
+    thresh = 0.75
+    pred_change_mask = state_var > thresh
+    actual_change_mask = graph.y[:,0] > thresh
+    color = ["rgb(0,0,0)" for _ in range(len(pred_change_mask))]
+    for ind, (pred, actual) in enumerate(zip(pred_change_mask, actual_change_mask)):
+        if pred == actual:
+            color[ind] = "rgb(0, 255,0)"
+        else:
+            if pred:
+                color[ind] = "rgb(0,0,255)" # blue false positive
+            if actual:
+                color[ind] = "rgb(255,0,0)"  # red false neg
     for cls, attr, gt, s, p, e in zip(graph.classifications, graph.x, graph.y, state_var, pos_var, existence_mask):
         inference_result = nl.join([f"state variability: {s:.3f}", f"position variability: {p:.3f}", f"existence mask: {e:.3f}"])
         nodes_hovertext.append(nl.join(
@@ -161,10 +173,9 @@ def plot_nodes(_graph: Data) -> gobj.Scatter3d:
         mode='markers',
         name="nodes",
         marker=dict(
-            # showscale=True,
-            # colorscale="Hot",
+            showscale=True,
+            colorscale="Hot",
             color=color,
-            # opacity=edge_opacity * existence_mask,
             size=10*(1+pos_var),
         ),
     )
