@@ -145,11 +145,11 @@ def plot_nodes(_graph: Data) -> gobj.Scatter3d:
     GCN.eval()
     pred = GCN.forward(inference_graph.x, inference_graph.edge_index, inference_graph.edge_attr)
     pred = torch.sigmoid(pred)
-    print(pred.shape)
     state_var, pos_var, existence_mask = pred.transpose(1, 0)
     x, y, z = graph.pos.transpose(1,0)
     nodes_hovertext = []
-    for cls, attr, s, p, e in zip(graph.classifications, graph.x, state_var, pos_var, existence_mask):
+    color = torch.abs(graph.y[:, 0] - state_var)
+    for cls, attr, gt, s, p, e in zip(graph.classifications, graph.x, graph.y, state_var, pos_var, existence_mask):
         inference_result = nl.join([f"state variability: {s:.3f}", f"position variability: {p:.3f}", f"existence mask: {e:.3f}"])
         nodes_hovertext.append(nl.join(
             [str(Objects3DSSG(int(cls))), inference_result, node_attr_to_str(attr)]))
@@ -160,8 +160,8 @@ def plot_nodes(_graph: Data) -> gobj.Scatter3d:
         name="nodes",
         marker=dict(
             # showscale=True,
-            colorscale="Hot",
-            color=state_var,
+            # colorscale="Hot",
+            color=color,
             # opacity=edge_opacity * existence_mask,
             size=10*(1+pos_var),
         ),
@@ -252,7 +252,7 @@ def dash_app(dataset, scan_id_to_idx):
         html.Div([
             dcc.Graph(
                 id='graph_vis',
-                style={'width': '90vh', 'height': '90vh'},
+                style={'width': '120vh', 'height': '120vh'},
             ),
         ], className="six columns"),
         ], className="row")
