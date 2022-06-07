@@ -1,0 +1,7 @@
+# SceneGraphChangeDataset.root = '/home/bzs/.cache/rclone/vfs/euler/cluster/home/zhousha/3dssg/3RScan'
+# SceneGraphChangeDataset.root = '/home/bzs/devel/euler/3dssg/3RScan'
+SceneGraphChangeDataset.root = '/home/bzs/devel/3dsg/3RScan'
+train_neuralnet.base_log_dir = "./experiments/"
+train_variability_main.test_split_file = "data/results/ml_models/test_split.npy"
+eval_main.test_split = "data/results/ml_models/test_split.npy"
+train_neuralnet.epochs = 1
